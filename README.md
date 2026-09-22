@@ -1,93 +1,82 @@
-# Proyecto de graficacion
+# Proyecto de Computación Gráfica
 
-Aplicacion de escritorio desarrollada en Python con Tkinter y Matplotlib. Permite calcular y graficar la recta que pasa por dos puntos.
+Aplicación de escritorio moderna desarrollada en Python con **CustomTkinter** y **Matplotlib**. Permite calcular, analizar y graficar la trayectoria y ecuación de la recta que pasa por dos puntos, con un diseño profesional, soporte nativo para **Modo Oscuro** y **Modo Claro** en tiempo real, esquinas redondeadas y plano cartesiano expandido.
 
 ## Requisitos
 
 - Python 3.10 o superior
-- Git, si se va a clonar el repositorio
-- Tkinter, incluido normalmente en Python para Windows
+- Tkinter (en Linux: `sudo pacman -S tk` o `sudo apt install python3-tk`)
+- CustomTkinter (`pip install customtkinter`)
+- CTkTable (`pip install CTkTable`)
+- Matplotlib
 
-## Instalacion en Windows
+---
 
-1. Clona el repositorio y entra a la carpeta del proyecto:
+## Activación del Entorno Virtual y Ejecución
 
-```powershell
-git clone <URL_DEL_REPOSITORIO>
-cd code
+### En Linux / Arch Linux / macOS
+
+1. Abrir una terminal en la carpeta del proyecto (`Graphics`).
+2. Activar el entorno virtual:
+
+```bash
+source .venv/bin/activate
 ```
 
-Si ya tienes el proyecto descargado, solo abre PowerShell en la carpeta raiz del proyecto.
+3. Ejecutar la aplicación:
 
-2. Crea el entorno virtual:
-
-```powershell
-python -m venv .venv
+```bash
+python main.py
 ```
 
-3. Activa el entorno virtual:
+4. Para salir del entorno virtual al finalizar:
+
+```bash
+deactivate
+```
+
+---
+
+### En Windows (PowerShell)
+
+1. Abrir PowerShell en la raíz del proyecto.
+2. Activar el entorno virtual:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Si PowerShell bloquea la activacion, ejecuta una vez en esa terminal:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
-```
-
-Despues vuelve a activar el entorno:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-4. Instala las dependencias:
-
-```powershell
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-## Ejecucion
-
-Con el entorno virtual activo, ejecuta:
+3. Ejecutar la aplicación:
 
 ```powershell
 python main.py
 ```
 
-Se abrira la ventana principal de la aplicacion. Para cerrar el entorno virtual cuando termines:
+---
 
-```powershell
-deactivate
-```
+## Características Principales
 
-## Actualizar las dependencias
+- **Diseño Moderno con CustomTkinter:** Interfaz elegante con bordes y esquinas redondeadas, transiciones suaves y estética contemporánea.
+- **Iconos Vectoriales Nativos (`CTkImage`):** Iconos de alta fidelidad renderizados con supersampling 4x integrados en botones y títulos.
+- **Sistema de Temas Nativo (Dark / Light):** Interruptor `CTkSwitch` en la barra lateral para alternar instantáneamente entre Modo Oscuro y Modo Claro.
+- **Plano Cartesiano Predominante:** Ocupa más del 80% de la ventana con escala adaptativa 1:1, fondo coordinado con el tema y alta definición.
+- **Tabla Moderna con CTkTable:** Visualización paso a paso de los puntos discretos con estilo redondeado, cabecera azul y filas alternadas.
+- **Datos Analíticos Separados y Claros:** Tarjetas con métricas organizadas en jerarquía: Pendiente ($m$, comportamiento, ángulo), Ecuación ($y = mx + b$, ordenada al origen) e Incrementos ($\Delta X, \Delta Y$, sentido y magnitud).
+- **Arquitectura Directa sin Componentes Innecesarios:** El código está organizado limpiamente dentro de `pages/` y `main.py`.
 
-Despues de instalar o actualizar paquetes, puedes volver a congelar las versiones instaladas:
+---
 
-```powershell
-python -m pip freeze > requirements.txt
-```
-
-En otra computadora, las mismas versiones se instalan con:
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-## Estructura principal
+## Estructura del Proyecto
 
 ```text
 .
 ├── main.py
+├── test_app.py
 ├── requirements.txt
-├── components/
-│   └── Button.py
+├── README.md
 └── pages/
     ├── Futuro.py
+    ├── icons.py
     ├── index.py
     └── puntos_colineales.py
 ```
