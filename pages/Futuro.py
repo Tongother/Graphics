@@ -26,9 +26,9 @@ def future_page(container):
     desc_label = ctk.CTkLabel(
         card,
         text="Este espacio está reservado para nuevos algoritmos de computación gráfica:\n\n"
-             "• Rasterización DDA y Bresenham\n"
-             "• Trazado de circunferencias y elipses\n"
-             "• Transformaciones geométricas 2D y curvas paramétricas",
+             "- Rasterización DDA y Bresenham\n"
+             "- Trazado de circunferencias y elipses\n"
+             "- Transformaciones geométricas 2D",
         font=ctk.CTkFont(size=13),
         justify="left",
         text_color=("gray40", "gray70")

@@ -57,10 +57,13 @@ python main.py
 ## Características Principales
 
 - **Diseño Moderno con CustomTkinter:** Interfaz elegante con bordes y esquinas redondeadas, transiciones suaves y estética contemporánea.
-- **Iconos Vectoriales Nativos (`CTkImage`):** Iconos de alta fidelidad renderizados con supersampling 4x integrados en botones y títulos.
+- **Iconos SVG (`CTkImage`):** Iconos de [Tabler Icons](https://tabler.io/icons) guardados en `public/`, rasterizados con `resvg-py` a 4x y recoloreados según el tema, integrados en botones y títulos.
 - **Sistema de Temas Nativo (Dark / Light):** Interruptor `CTkSwitch` en la barra lateral para alternar instantáneamente entre Modo Oscuro y Modo Claro.
 - **Plano Cartesiano Predominante:** Ocupa más del 80% de la ventana con escala adaptativa 1:1, fondo coordinado con el tema y alta definición.
+- **Zoom y Desplazamiento:** La rueda del mouse acerca o aleja (centrado en el cursor) y arrastrar con clic izquierdo mueve el plano, sin cambiar el tamaño de la gráfica. El botón "Centrar vista" regresa a la vista original.
 - **Tabla Moderna con CTkTable:** Visualización paso a paso de los puntos discretos con estilo redondeado, cabecera azul y filas alternadas.
+- **Casos de Trazo del Documento:** Clasifica la recta en 4 casos positivos, 4 negativos y 3 especiales (45° en sus 4 direcciones, horizontal y vertical), contando cada sentido de dibujo como un caso distinto, y muestra su notación (p. ej. `+m<1, m = 2/5 · Xₖ₊₁ = Xₖ + 1 · Yₖ₊₁ = Yₖ + m`).
+- **Decimales y Píxeles:** La tabla muestra los valores con dos decimales y el píxel redondeado al entero más cercano.
 - **Datos Analíticos Separados y Claros:** Tarjetas con métricas organizadas en jerarquía: Pendiente ($m$, comportamiento, ángulo), Ecuación ($y = mx + b$, ordenada al origen) e Incrementos ($\Delta X, \Delta Y$, sentido y magnitud).
 - **Arquitectura Directa sin Componentes Innecesarios:** El código está organizado limpiamente dentro de `pages/` y `main.py`.
 
@@ -74,6 +77,7 @@ python main.py
 ├── test_app.py
 ├── requirements.txt
 ├── README.md
+├── public/          # Iconos SVG (se cargan por nombre de archivo)
 └── pages/
     ├── Futuro.py
     ├── icons.py
