@@ -47,6 +47,9 @@ def _draw_lucide_shape(name, draw, s, rgba):
         line([(18, 6), (6, 18)])
         circle(12, 12, 2.5, fill=rgba, outline=rgba)
 
+    elif name == "triangle":
+        line([(12, 3.5), (21.5, 20), (2.5, 20), (12, 3.5)])
+
     elif name == "play":
         pts = [pt(7, 5), pt(19, 12), pt(7, 19)]
         draw.polygon(pts, fill=rgba, outline=rgba)

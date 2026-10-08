@@ -14,7 +14,7 @@ ctk.set_default_color_theme("blue")
 
 # 2. Ventana Principal
 root = ctk.CTk()
-root.title("Computación Gráfica - Visualizador de Rectas")
+root.title("Computación Gráfica - Visualizador de Rectas y Triángulos")
 root.geometry("1340x840")
 root.minsize(1100, 720)
 
@@ -71,25 +71,30 @@ btn_puntos = ctk.CTkButton(
 btn_puntos.pack(fill="x", padx=14, pady=4)
 nav_buttons["puntos_colineales"] = btn_puntos
 
-icon_futuro = get_icon("sparkles", size=18, light_color="#1E293B", dark_color="#F8FAFC")
-btn_futuro = ctk.CTkButton(
+icon_triangulo = get_icon("triangle", size=18, light_color="#1E293B", dark_color="#F8FAFC")
+btn_triangulo = ctk.CTkButton(
     sidebar,
-    text="  Módulo Futuro",
-    image=icon_futuro,
+    text="  Trazado de Triángulo",
+    image=icon_triangulo,
     compound="left",
     height=40,
     corner_radius=8,
     anchor="w",
     font=ctk.CTkFont(size=13),
-    command=lambda: show_page("futuro")
+    command=lambda: show_page("triangulo")
 )
-btn_futuro.pack(fill="x", padx=14, pady=4)
-nav_buttons["futuro"] = btn_futuro
+btn_triangulo.pack(fill="x", padx=14, pady=4)
+nav_buttons["triangulo"] = btn_triangulo
+nav_buttons["futuro"] = btn_triangulo
 
 
 def on_page_changed(page_name):
-    for name, btn in nav_buttons.items():
-        if name == page_name:
+    active_key = "triangulo" if page_name in ("triangulo", "futuro") else page_name
+    for name in ("puntos_colineales", "triangulo"):
+        btn = nav_buttons.get(name)
+        if not btn:
+            continue
+        if name == active_key:
             btn.configure(
                 fg_color=["#3B82F6", "#2563EB"],
                 text_color="#FFFFFF",

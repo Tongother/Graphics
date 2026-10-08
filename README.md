@@ -56,12 +56,14 @@ python main.py
 
 ## Características Principales
 
+- **Módulo de Puntos Colineales:** Cálculo analítico de pendientes, vector director, ecuación explícita y rasterización discreta de rectas.
+- **Módulo de Trazado de Triángulo:** Entrada de 3 coordenadas ($A, B, C$), cálculo de área mediante fórmula de Gauss/Shoelace, perímetro, longitudes euclidianas, pendientes de cada lado, clasificación (por lados: Equilátero/Isósceles/Escaleno; por ángulos: Acutángulo/Rectángulo/Obtusángulo; detección de colineales), relleno de polígono translúcido y tabla discreta segmento por segmento con `CTkTable`.
 - **Diseño Moderno con CustomTkinter:** Interfaz elegante con bordes y esquinas redondeadas, transiciones suaves y estética contemporánea.
 - **Iconos Vectoriales Nativos (`CTkImage`):** Iconos de alta fidelidad renderizados con supersampling 4x integrados en botones y títulos.
 - **Sistema de Temas Nativo (Dark / Light):** Interruptor `CTkSwitch` en la barra lateral para alternar instantáneamente entre Modo Oscuro y Modo Claro.
 - **Plano Cartesiano Predominante:** Ocupa más del 80% de la ventana con escala adaptativa 1:1, fondo coordinado con el tema y alta definición.
 - **Tabla Moderna con CTkTable:** Visualización paso a paso de los puntos discretos con estilo redondeado, cabecera azul y filas alternadas.
-- **Datos Analíticos Separados y Claros:** Tarjetas con métricas organizadas en jerarquía: Pendiente ($m$, comportamiento, ángulo), Ecuación ($y = mx + b$, ordenada al origen) e Incrementos ($\Delta X, \Delta Y$, sentido y magnitud).
+- **Datos Analíticos Separados y Claros:** Tarjetas con métricas organizadas en jerarquía estructurada en 4 columnas.
 - **Arquitectura Directa sin Componentes Innecesarios:** El código está organizado limpiamente dentro de `pages/` y `main.py`.
 
 ---
@@ -78,5 +80,6 @@ python main.py
     ├── Futuro.py
     ├── icons.py
     ├── index.py
-    └── puntos_colineales.py
+    ├── puntos_colineales.py
+    └── triangulo.py
 ```
