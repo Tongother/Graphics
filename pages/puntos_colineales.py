@@ -1,8 +1,10 @@
 import math
+from fractions import Fraction
 from tkinter import messagebox
 import customtkinter as ctk
 from CTkTable import CTkTable
 
+from matplotlib.backend_tools import Cursors
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -27,7 +29,9 @@ def notify_theme_to_plot():
 
 
 def get_pendiente(x1, y1, x2, y2):
-    return (y2 - y1) / (x2 - x1)
+    pendiente = (y2 - y1) / (x2 - x1)
+    # Evita el "-0" que resulta de dividir 0 entre un número negativo
+    return 0.0 if pendiente == 0 else pendiente
 
 
 def get_ordenada(x1, y1, pendiente):
@@ -36,8 +40,99 @@ def get_ordenada(x1, y1, pendiente):
 
 def get_ecuacion_recta(x1, y1, pendiente):
     ordenada = get_ordenada(x1, y1, pendiente)
-    signo = "+" if ordenada >= 0 else "-"
-    return f"y = {pendiente:g}x {signo} {abs(ordenada):g}"
+    if pendiente == 0:
+        return f"y = {ordenada:g}"
+
+    if pendiente == 1:
+        termino_x = "x"
+    elif pendiente == -1:
+        termino_x = "-x"
+    else:
+        termino_x = f"{pendiente:g}x"
+
+    if ordenada == 0:
+        return f"y = {termino_x}"
+    signo = "+" if ordenada > 0 else "-"
+    return f"y = {termino_x} {signo} {abs(ordenada):g}"
+
+
+def formatear_pendiente(dx, dy):
+    """Pendiente como fracción reducida (2/5) cuando es exacta; si no, en decimal."""
+    m = dy / dx
+    fraccion = (Fraction(str(dy)) / Fraction(str(dx))).limit_denominator(1000)
+    texto = str(fraccion) if abs(float(fraccion) - m) < 1e-9 else f"{m:.4g}"
+    return texto.replace("-", "−")
+
+
+def clasificar_recta(dx, dy):
+    """
+    Identifica el caso de trazo según los incrementos ΔX y ΔY, con la agrupación
+    del documento: 4 positivos, 4 negativos y 3 especiales (45°, horizontal y
+    vertical). Cada inclinación se dibuja en los dos sentidos y cada sentido es
+    un caso distinto.
+    Retorna una tupla (caso, detalle, notacion).
+    """
+    if dx == 0 and dy == 0:
+        # No es un caso del documento: solo protege contra A = B
+        return "Un solo punto", "A y B son iguales: no hay recorrido", "Sin recorrido: ΔX = 0 y ΔY = 0"
+
+    sx = "+" if dx > 0 else "−"
+    sy = "+" if dy > 0 else "−"
+    sentido_x = "izquierda → derecha" if dx > 0 else "derecha → izquierda"
+
+    if dy == 0:
+        return "Especial: horizontal", sentido_x, f"m = 0 · Xₖ₊₁ = Xₖ {sx} 1 · Y no cambia"
+
+    if dx == 0:
+        sentido_y = "abajo → arriba" if dy > 0 else "arriba → abajo"
+        return "Especial: vertical", sentido_y, f"m = Error (indefinida) · Yₖ₊₁ = Yₖ {sy} 1 · X no cambia"
+
+    if abs(abs(dx) - abs(dy)) < 1e-9:
+        inciso, flecha = {
+            ("+", "+"): ("a", "↗"),
+            ("+", "−"): ("b", "↘"),
+            ("−", "−"): ("c", "↙"),
+            ("−", "+"): ("d", "↖"),
+        }[(sx, sy)]
+        m = "1" if sx == sy else "−1"
+        sentido_y = "subiendo" if dy > 0 else "bajando"
+        return (
+            f"Especial 45° {inciso}) {flecha}",
+            f"Diagonal, {sentido_x}, {sentido_y}",
+            f"m = {m} · Xₖ₊₁ = Xₖ {sx} 1 · Yₖ₊₁ = Yₖ {sy} 1"
+        )
+
+    acostada = abs(dy) < abs(dx)
+    if (dx > 0) == (dy > 0):
+        # Positivo 1 y 3 van de izquierda a derecha; 2 y 4 de derecha a izquierda
+        numero = (1 if acostada else 3) + (0 if dx > 0 else 1)
+        grupo, trazo, clase = "Positivo", "/", "+m<1" if acostada else "+m>1"
+        paso_m, paso_inv = "m", "1/m"
+    else:
+        # Negativo 1 y 3 van de derecha a izquierda; 2 y 4 de izquierda a derecha
+        numero = (1 if acostada else 3) + (0 if dx < 0 else 1)
+        grupo, trazo, clase = "Negativo", "\\", "|−m|<1" if acostada else "|−m|>1"
+        paso_m, paso_inv = "|m|", "1/|m|"
+
+    if acostada:
+        formula = f"Xₖ₊₁ = Xₖ {sx} 1 · Yₖ₊₁ = Yₖ {sy} {paso_m}"
+    else:
+        formula = f"Yₖ₊₁ = Yₖ {sy} 1 · Xₖ₊₁ = Xₖ {sx} {paso_inv}"
+
+    inclinacion = "Acostada" if acostada else "Parada"
+    return (
+        f"{grupo} {numero}",
+        f"{inclinacion} {trazo}, {sentido_x}",
+        f"{clase}, m = {formatear_pendiente(dx, dy)} · {formula}"
+    )
+
+
+def redondear_pixel(valor):
+    """
+    Posición del píxel: el entero más cercano, con las mitades hacia arriba.
+    No se usa round() porque redondea 0.5 al par (round(2.5) == 2).
+    """
+    return math.floor(valor + 0.5)
 
 
 def get_direccion_x(dx):
@@ -53,7 +148,7 @@ def get_direccion_y(dy):
         return "Abajo a Arriba"
     elif dy < 0:
         return "Arriba a Abajo"
-    return "Horizontal (Constante)"
+    return "Sin cambio vertical"
 
 
 def get_comportamiento_pendiente(m):
@@ -70,9 +165,14 @@ def generar_puntos_trayectoria(x1, y1, x2, y2):
     pasos = int(max(abs(dx), abs(dy)))
     puntos = []
 
-    if pasos == 0:
+    if dx == 0 and dy == 0:
         return [(0, x1, y1)]
+    if pasos == 0:
+        # Puntos distintos a menos de una unidad: un solo paso de A a B
+        pasos = 1
 
+    # Un eje avanza ±1 por paso y el otro ±|m| (o ±1/|m|). Se calcula A + i·paso
+    # en lugar de sumar el paso en cada vuelta para no acumular error de redondeo.
     step_x = dx / pasos
     step_y = dy / pasos
 
@@ -90,13 +190,6 @@ def generar_puntos_trayectoria(x1, y1, x2, y2):
         puntos.append((i, px, py))
 
     return puntos
-
-
-def plot_points(x1, x2, y1, pendiente, limit):
-    ordenada = get_ordenada(x1, y1, pendiente)
-    x_line = [-limit, limit]
-    y_line = [pendiente * (-limit) + ordenada, pendiente * limit + ordenada]
-    return {"X": x_line, "Y": y_line}
 
 
 def setup_ejes(ax, figure, limit=10, is_dark=True):
@@ -128,7 +221,8 @@ def setup_ejes(ax, figure, limit=10, is_dark=True):
     ax.set_aspect("equal", adjustable="box")
 
 
-def render_plot(ax, figure, canvas):
+def render_plot(ax, figure, canvas, view=None):
+    """Redibuja el plano; view = (xlim, ylim) conserva el zoom y la posición actuales."""
     is_dark = (ctk.get_appearance_mode().lower() == "dark")
     line_color = "#3B82F6" if is_dark else "#2563EB"
     pt_color = "#38BDF8" if is_dark else "#0284C7"
@@ -143,19 +237,21 @@ def render_plot(ax, figure, canvas):
     setup_ejes(ax, figure, limit=limit, is_dark=is_dark)
 
     if current_data.get("has_data"):
-        points = current_data["points"]
         table_points = current_data["table_points"]
         x1, y1 = current_data["x1"], current_data["y1"]
         x2, y2 = current_data["x2"], current_data["y2"]
         equation = current_data["equation"]
+        mismo_punto = (x1 == x2 and y1 == y2)
 
-        # Recta continua
-        ax.plot(
-            points["X"], points["Y"],
-            color=line_color,
-            linewidth=2.4,
-            label=f"Recta: {equation}"
-        )
+        # Recta infinita que pasa por A y B: sigue visible al mover el plano
+        # (no existe cuando A y B son el mismo punto)
+        if not mismo_punto:
+            ax.axline(
+                (x1, y1), (x2, y2),
+                color=line_color,
+                linewidth=2.4,
+                label=f"Recta: {equation}"
+            )
 
         # Puntos de trayectoria
         if table_points and len(table_points) > 2:
@@ -171,14 +267,16 @@ def render_plot(ax, figure, canvas):
                 label="Puntos de trayectoria"
             )
 
-        # Punto A y Punto B
-        ax.plot([x1], [y1], marker="o", markersize=9, color=pt_a_color, linestyle="None", label=f"A ({x1:g}, {y1:g})")
-        ax.plot([x2], [y2], marker="s", markersize=9, color=pt_b_color, linestyle="None", label=f"B ({x2:g}, {y2:g})")
+        # Punto A y Punto B (si coinciden se dibuja uno solo)
+        texto_a = f"A = B ({x1:g}, {y1:g})" if mismo_punto else f"A ({x1:g}, {y1:g})"
+        ax.plot([x1], [y1], marker="o", markersize=9, color=pt_a_color, linestyle="None", label=texto_a)
+        if not mismo_punto:
+            ax.plot([x2], [y2], marker="s", markersize=9, color=pt_b_color, linestyle="None", label=f"B ({x2:g}, {y2:g})")
 
         # Anotaciones
         bbox_a = dict(boxstyle="round,pad=0.35", fc=fig_bg, ec=pt_a_color, lw=1.2, alpha=0.95)
         ax.annotate(
-            f"A ({x1:g}, {y1:g})",
+            texto_a,
             (x1, y1),
             textcoords="offset points",
             xytext=(0, 14),
@@ -189,21 +287,22 @@ def render_plot(ax, figure, canvas):
             bbox=bbox_a
         )
 
-        bbox_b = dict(boxstyle="round,pad=0.35", fc=fig_bg, ec=pt_b_color, lw=1.2, alpha=0.95)
-        ax.annotate(
-            f"B ({x2:g}, {y2:g})",
-            (x2, y2),
-            textcoords="offset points",
-            xytext=(0, 14),
-            ha="center",
-            fontsize=9,
-            fontweight="bold",
-            color=pt_b_color,
-            bbox=bbox_b
-        )
+        if not mismo_punto:
+            bbox_b = dict(boxstyle="round,pad=0.35", fc=fig_bg, ec=pt_b_color, lw=1.2, alpha=0.95)
+            ax.annotate(
+                f"B ({x2:g}, {y2:g})",
+                (x2, y2),
+                textcoords="offset points",
+                xytext=(0, 14),
+                ha="center",
+                fontsize=9,
+                fontweight="bold",
+                color=pt_b_color,
+                bbox=bbox_b
+            )
 
         legend = ax.legend(
-            loc="upper left",
+            loc="best",
             fontsize=8.5,
             framealpha=0.88,
             facecolor=fig_bg,
@@ -212,8 +311,61 @@ def render_plot(ax, figure, canvas):
         for text in legend.get_texts():
             text.set_color(text_color)
 
+    if view is not None:
+        ax.set_xlim(view[0])
+        ax.set_ylim(view[1])
+
     figure.tight_layout()
     canvas.draw()
+
+
+def habilitar_navegacion(ax, canvas):
+    """
+    Zoom con la rueda del mouse (centrado en el cursor) y arrastre con clic
+    izquierdo para mover el plano. Solo cambian los límites de los ejes, así que
+    la gráfica conserva su tamaño.
+    """
+    arrastre = {}
+
+    def on_scroll(event):
+        if event.inaxes is not ax:
+            return
+        # Rueda hacia arriba acerca; cada muesca escala 1.2x
+        factor = 1.2 ** -event.step
+        (x0, x1), (y0, y1) = ax.get_xlim(), ax.get_ylim()
+        if not 1 <= (x1 - x0) * factor <= 10000:
+            return
+        cx, cy = event.xdata, event.ydata
+        ax.set_xlim(cx - (cx - x0) * factor, cx + (x1 - cx) * factor)
+        ax.set_ylim(cy - (cy - y0) * factor, cy + (y1 - cy) * factor)
+        canvas.draw_idle()
+
+    def on_press(event):
+        if event.inaxes is not ax or event.button != 1:
+            return
+        arrastre.update(x=event.x, y=event.y, xlim=ax.get_xlim(), ylim=ax.get_ylim())
+        canvas.set_cursor(Cursors.MOVE)
+
+    def on_motion(event):
+        if not arrastre:
+            return
+        # Desplazamiento en píxeles de pantalla convertido a unidades del plano
+        (x0, x1), (y0, y1) = arrastre["xlim"], arrastre["ylim"]
+        dx = (event.x - arrastre["x"]) * (x1 - x0) / ax.bbox.width
+        dy = (event.y - arrastre["y"]) * (y1 - y0) / ax.bbox.height
+        ax.set_xlim(x0 - dx, x1 - dx)
+        ax.set_ylim(y0 - dy, y1 - dy)
+        canvas.draw_idle()
+
+    def on_release(event):
+        if arrastre:
+            arrastre.clear()
+            canvas.set_cursor(Cursors.POINTER)
+
+    canvas.mpl_connect("scroll_event", on_scroll)
+    canvas.mpl_connect("button_press_event", on_press)
+    canvas.mpl_connect("motion_notify_event", on_motion)
+    canvas.mpl_connect("button_release_event", on_release)
 
 
 def create_puntos_colineales_page(container):
@@ -285,7 +437,7 @@ def create_puntos_colineales_page(container):
     actions_box = ctk.CTkFrame(form_top, fg_color="transparent")
     actions_box.pack(side="left", fill="y", padx=4)
 
-    icon_play = get_icon("play", size=15, light_color="#FFFFFF", dark_color="#FFFFFF")
+    icon_play = get_icon("player-play", size=15, light_color="#FFFFFF", dark_color="#FFFFFF")
     btn_calc = ctk.CTkButton(
         actions_box,
         text="  Calcular Trayectoria",
@@ -298,7 +450,7 @@ def create_puntos_colineales_page(container):
     )
     btn_calc.pack(side="left", padx=(0, 8), pady=6)
 
-    icon_clear = get_icon("rotate-ccw", size=15, light_color="#1E293B", dark_color="#F8FAFC")
+    icon_clear = get_icon("rotate", size=15, light_color="#1E293B", dark_color="#F8FAFC")
     btn_clear = ctk.CTkButton(
         actions_box,
         text="  Limpiar",
@@ -364,12 +516,24 @@ def create_puntos_colineales_page(container):
     val_dy_sub2 = ctk.CTkLabel(tile_dy, text="Magnitud: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
     val_dy_sub2.pack(anchor="w", padx=12, pady=(0, 6))
 
+    # Franja: caso de trazo detectado y su notación (ocupa las 4 columnas)
+    tile_caso = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=("gray92", "gray20"))
+    tile_caso.grid(row=1, column=0, columnspan=4, sticky="nsew", padx=6, pady=(0, 8))
+    ctk.CTkLabel(tile_caso, text="CASO DETECTADO", height=22, font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").grid(row=0, column=0, sticky="w", padx=(12, 10), pady=(6, 0))
+    val_caso = ctk.CTkLabel(tile_caso, text="--", height=22, font=ctk.CTkFont(size=13, weight="bold"), anchor="w")
+    val_caso.grid(row=0, column=1, sticky="w", pady=(6, 0))
+    val_caso_sub = ctk.CTkLabel(tile_caso, text="", height=22, font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
+    val_caso_sub.grid(row=0, column=2, sticky="w", padx=(12, 12), pady=(6, 0))
+    ctk.CTkLabel(tile_caso, text="NOTACIÓN", height=22, font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").grid(row=1, column=0, sticky="w", padx=(12, 10), pady=(0, 6))
+    val_notacion = ctk.CTkLabel(tile_caso, text="--", height=22, font=ctk.CTkFont(size=12), anchor="w")
+    val_notacion.grid(row=1, column=1, columnspan=2, sticky="w", pady=(0, 6))
+
     # --- 4. CONTENIDO INFERIOR: TABLA CTkTable Y PLANO EXPANDIDO ---
     split_box = ctk.CTkFrame(page, corner_radius=0, fg_color="transparent")
     split_box.pack(fill="both", expand=True, padx=20, pady=(0, 12))
 
     # A) TABLA COMPACTA CON CTkTable
-    table_card = ctk.CTkFrame(split_box, width=250, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
+    table_card = ctk.CTkFrame(split_box, width=330, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
     table_card.pack(side="left", fill="y", padx=(0, 10))
     table_card.pack_propagate(False)
 
@@ -394,7 +558,7 @@ def create_puntos_colineales_page(container):
     table_scroll = ctk.CTkScrollableFrame(table_card, fg_color="transparent", corner_radius=8)
     table_scroll.pack(fill="both", expand=True, padx=4, pady=(0, 8))
 
-    default_table_data = [["Paso", "Coord X", "Coord Y"]]
+    default_table_data = [["Paso", "Xₖ", "Yₖ", "Píxel"]]
     table_holder = {"table": None}
 
     def render_table(rows_data):
@@ -404,7 +568,8 @@ def create_puntos_colineales_page(container):
         ctk_tbl = CTkTable(
             table_scroll,
             row=len(rows_data),
-            column=3,
+            column=4,
+            width=70,
             values=rows_data,
             header_color=("#3B82F6", "#1D4ED8"),
             colors=[("gray95", "#21252D"), ("gray90", "#1A1D24")],
@@ -426,7 +591,7 @@ def create_puntos_colineales_page(container):
     grp_header = ctk.CTkFrame(graph_card, fg_color="transparent")
     grp_header.pack(fill="x", padx=14, pady=(10, 4))
 
-    icon_grid = get_icon("grid-math", size=16, light_color="#2563EB", dark_color="#3B82F6")
+    icon_grid = get_icon("grid-dots", size=16, light_color="#2563EB", dark_color="#3B82F6")
     grp_title = ctk.CTkLabel(
         grp_header,
         text="  Visualizador Geométrico",
@@ -437,8 +602,26 @@ def create_puntos_colineales_page(container):
     )
     grp_title.pack(side="left")
 
-    grp_info = ctk.CTkLabel(grp_header, text="Escala Proporcional 1:1", font=ctk.CTkFont(size=10), text_color="gray", anchor="e")
-    grp_info.pack(side="right")
+    icon_centrar = get_icon("focus-centered", size=14, light_color="#1E293B", dark_color="#F8FAFC")
+    btn_centrar = ctk.CTkButton(
+        grp_header,
+        text=" Centrar vista",
+        image=icon_centrar,
+        compound="left",
+        width=0,
+        height=26,
+        corner_radius=6,
+        fg_color="transparent",
+        border_width=1,
+        border_color=("gray70", "gray40"),
+        text_color=("gray20", "gray85"),
+        font=ctk.CTkFont(size=11),
+        command=lambda: restablecer_vista()
+    )
+    btn_centrar.pack(side="right")
+
+    grp_info = ctk.CTkLabel(grp_header, text="Rueda: zoom · Arrastrar: mover", font=ctk.CTkFont(size=10), text_color="gray", anchor="e")
+    grp_info.pack(side="right", padx=(0, 10))
 
     figure = Figure(figsize=(7, 5), dpi=100)
     ax = figure.add_subplot(111)
@@ -447,6 +630,7 @@ def create_puntos_colineales_page(container):
     canvas = FigureCanvasTkAgg(figure, master=graph_card)
     canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=(0, 10))
     canvas.draw()
+    habilitar_navegacion(ax, canvas)
 
     # --- LÓGICA DE CONTROL ---
     def calculate():
@@ -463,24 +647,11 @@ def create_puntos_colineales_page(container):
             messagebox.showerror("Dato Inválido", "Por favor ingresa coordenadas numéricas válidas.")
             return
 
-        if x2 == x1:
-            messagebox.showwarning(
-                "Recta Vertical",
-                f"X₁ es igual a X₂ ({x1}). La pendiente es indefinida (división por cero).\n"
-                f"Ecuación vertical: x = {x1}"
-            )
-            return
-
         delta_x = x2 - x1
         delta_y = y2 - y1
         dir_x = get_direccion_x(delta_x)
         dir_y = get_direccion_y(delta_y)
-
-        pendiente = get_pendiente(x1, y1, x2, y2)
-        ordenada = get_ordenada(x1, y1, pendiente)
-        comportamiento = get_comportamiento_pendiente(pendiente)
-        angulo = math.degrees(math.atan(pendiente))
-        equation = get_ecuacion_recta(x1, y1, pendiente)
+        caso, caso_detalle, notacion = clasificar_recta(delta_x, delta_y)
 
         max_val = max(abs(x1), abs(y1), abs(x2), abs(y2))
         if max_val == 0:
@@ -488,7 +659,24 @@ def create_puntos_colineales_page(container):
         margin = max(2, int(max_val * 0.15) + 1)
         limit = max_val + margin
 
-        points = plot_points(x1, x2, y1, pendiente, limit)
+        if delta_x == 0 and delta_y == 0:
+            # Un solo punto: no hay recta, pendiente ni ángulo
+            pendiente = ordenada = angulo = None
+            comportamiento = "Sin dirección (un solo punto)"
+            equation = f"Punto ({x1:g}, {y1:g})"
+        elif delta_x == 0:
+            # Recta vertical: la pendiente es indefinida (división entre cero)
+            pendiente = ordenada = None
+            comportamiento = "Vertical"
+            angulo = 90.0
+            equation = f"x = {x1:g}"
+        else:
+            pendiente = get_pendiente(x1, y1, x2, y2)
+            ordenada = get_ordenada(x1, y1, pendiente)
+            comportamiento = get_comportamiento_pendiente(pendiente)
+            angulo = math.degrees(math.atan(pendiente))
+            equation = get_ecuacion_recta(x1, y1, pendiente)
+
         table_points = generar_puntos_trayectoria(x1, y1, x2, y2)
 
         current_data.clear()
@@ -503,25 +691,33 @@ def create_puntos_colineales_page(container):
             "comportamiento": comportamiento,
             "angulo": angulo,
             "equation": equation,
+            "caso": caso,
+            "notacion": notacion,
             "delta_x": delta_x,
             "delta_y": delta_y,
             "dir_x": dir_x,
             "dir_y": dir_y,
             "limit": limit,
-            "points": points,
             "table_points": table_points,
         })
 
         # Actualizar datos separados de manera clara en las 4 tarjetas
         # 1. Pendiente
-        val_m_num.configure(text=f"{pendiente:g}")
+        val_m_num.configure(text=f"{pendiente:g}" if pendiente is not None else "Indefinida")
         val_m_sub1.configure(text=f"Sentido: {comportamiento}")
-        val_m_sub2.configure(text=f"Ángulo: {angulo:.1f}°")
+        val_m_sub2.configure(text=f"Ángulo: {angulo:.1f}°" if angulo is not None else "Ángulo: --")
 
         # 2. Ecuación
         val_eq_num.configure(text=equation)
-        val_eq_sub1.configure(text=f"Ordenada (b): {ordenada:g}")
-        val_eq_sub2.configure(text=f"Forma: y = mx + b")
+        if ordenada is not None:
+            val_eq_sub1.configure(text=f"Ordenada (b): {ordenada:g}")
+            val_eq_sub2.configure(text="Forma: y = mx + b")
+        elif delta_y != 0:
+            val_eq_sub1.configure(text="Ordenada (b): no existe")
+            val_eq_sub2.configure(text="Forma: x = constante")
+        else:
+            val_eq_sub1.configure(text="Ordenada (b): no existe")
+            val_eq_sub2.configure(text="Forma: punto aislado")
 
         # 3. Incremento X
         val_dx_num.configure(text=f"{delta_x:+g}" if delta_x != 0 else "0")
@@ -533,10 +729,16 @@ def create_puntos_colineales_page(container):
         val_dy_sub1.configure(text=f"Sentido: {dir_y}")
         val_dy_sub2.configure(text=f"Magnitud: |ΔY| = {abs(delta_y):g}")
 
-        # Llenar CTkTable
-        new_table_data = [["Paso", "Coord X", "Coord Y"]]
+        # 5. Caso detectado
+        val_caso.configure(text=caso)
+        val_caso_sub.configure(text=caso_detalle)
+        val_notacion.configure(text=notacion)
+
+        # Llenar CTkTable: valores con decimales y el píxel redondeado que les corresponde
+        new_table_data = [list(default_table_data[0])]
         for paso, px, py in table_points:
-            new_table_data.append([str(paso), f"{px:g}", f"{py:g}"])
+            pixel = f"({redondear_pixel(px)}, {redondear_pixel(py)})"
+            new_table_data.append([str(paso), f"{px:.2f}", f"{py:.2f}", pixel])
         render_table(new_table_data)
 
         tbl_count.configure(text=f"{len(table_points)} puntos calculados")
@@ -566,6 +768,10 @@ def create_puntos_colineales_page(container):
         val_dy_sub1.configure(text="Sentido: --")
         val_dy_sub2.configure(text="Magnitud: --")
 
+        val_caso.configure(text="--")
+        val_caso_sub.configure(text="")
+        val_notacion.configure(text="--")
+
         render_table(default_table_data)
         tbl_count.configure(text="0 pasos calculados")
         current_data.clear()
@@ -574,7 +780,14 @@ def create_puntos_colineales_page(container):
         entryXA.focus_set()
 
     def update_plot():
-        render_plot(ax, figure, canvas)
+        # Cambio de tema: se conserva el zoom y la posición que dejó el usuario
+        render_plot(ax, figure, canvas, view=(ax.get_xlim(), ax.get_ylim()))
+
+    def restablecer_vista():
+        limit = current_data.get("limit", 10)
+        ax.set_xlim(-limit, limit)
+        ax.set_ylim(-limit, limit)
+        canvas.draw_idle()
 
     register_plot_updater(update_plot)
 

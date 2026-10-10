@@ -257,7 +257,7 @@ def create_triangulo_page(container):
     actions_box = ctk.CTkFrame(form_top, fg_color="transparent")
     actions_box.pack(side="left", fill="y", padx=4)
 
-    icon_play = get_icon("play", size=15, light_color="#FFFFFF", dark_color="#FFFFFF")
+    icon_play = get_icon("player-play", size=15, light_color="#FFFFFF", dark_color="#FFFFFF")
     btn_calc = ctk.CTkButton(
         actions_box,
         text="  Calcular Triángulo",
@@ -270,7 +270,7 @@ def create_triangulo_page(container):
     )
     btn_calc.pack(side="left", padx=(0, 8), pady=6)
 
-    icon_clear = get_icon("rotate-ccw", size=15, light_color="#1E293B", dark_color="#F8FAFC")
+    icon_clear = get_icon("rotate", size=15, light_color="#1E293B", dark_color="#F8FAFC")
     btn_clear = ctk.CTkButton(
         actions_box,
         text="  Limpiar",

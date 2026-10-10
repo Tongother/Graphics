@@ -56,7 +56,7 @@ sep.pack(fill="x", padx=16, pady=(0, 16))
 # Menú de Navegación con Iconos
 nav_buttons = {}
 
-icon_puntos = get_icon("trending-up", size=18, light_color="#1E293B", dark_color="#F8FAFC")
+icon_puntos = get_icon("trending-up-down", size=18, light_color="#1E293B", dark_color="#F8FAFC")
 btn_puntos = ctk.CTkButton(
     sidebar,
     text="  Puntos Colineales",
