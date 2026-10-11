@@ -192,6 +192,11 @@ def generar_puntos_trayectoria(x1, y1, x2, y2):
     return puntos
 
 
+def rasterizar_pixeles(puntos):
+    """Píxeles que enciende el DDA: cada punto (paso, X, Y) redondeado a enteros."""
+    return [(redondear_pixel(px), redondear_pixel(py)) for _, px, py in puntos]
+
+
 def setup_ejes(ax, figure, limit=10, is_dark=True):
     fig_bg = "#2B2B2B" if is_dark else "#F2F2F2"
     ax_bg = "#1A1A1A" if is_dark else "#FFFFFF"
@@ -243,29 +248,23 @@ def render_plot(ax, figure, canvas, view=None):
         equation = current_data["equation"]
         mismo_punto = (x1 == x2 and y1 == y2)
 
-        # Recta infinita que pasa por A y B: sigue visible al mover el plano
-        # (no existe cuando A y B son el mismo punto)
+        # Recta trazada con DDA: se unen los píxeles redondeados, por eso al
+        # acercar el plano se ve el escalonado (sierra) propio del método
         if not mismo_punto:
-            ax.axline(
-                (x1, y1), (x2, y2),
+            pixeles = rasterizar_pixeles(table_points)
+            ax.plot(
+                [p[0] for p in pixeles], [p[1] for p in pixeles],
                 color=line_color,
-                linewidth=2.4,
-                label=f"Recta: {equation}"
+                linewidth=2.0,
+                marker="o",
+                markersize=4,
+                markerfacecolor=pt_color,
+                markeredgecolor=pt_color,
+                label=f"Recta DDA: {equation}"
             )
 
-        # Puntos de trayectoria
-        if table_points and len(table_points) > 2:
-            t_x = [pt[1] for pt in table_points]
-            t_y = [pt[2] for pt in table_points]
-            ax.plot(
-                t_x, t_y,
-                marker="o",
-                markersize=4.5,
-                color=pt_color,
-                linestyle="None",
-                alpha=0.6,
-                label="Puntos de trayectoria"
-            )
+        # A y B se marcan en su píxel (redondeado) para que queden sobre la recta DDA
+        x1, y1, x2, y2 = (redondear_pixel(v) for v in (x1, y1, x2, y2))
 
         # Punto A y Punto B (si coinciden se dibuja uno solo)
         texto_a = f"A = B ({x1:g}, {y1:g})" if mismo_punto else f"A ({x1:g}, {y1:g})"
@@ -368,11 +367,37 @@ def habilitar_navegacion(ax, canvas):
     canvas.mpl_connect("button_release_event", on_release)
 
 
+# Alto del bloque tabla + plano; puede superar la ventana porque la página tiene scroll
+ALTURA_GRAFICA = 760
+
+
+class PaginaDesplazable(ctk.CTkScrollableFrame):
+    """
+    Contenido de una página con scroll vertical. La rueda del mouse sobre la
+    gráfica no mueve la página, porque ahí la rueda hace zoom en el plano.
+    """
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self._sin_scroll = []
+
+    def excluir_rueda(self, widget):
+        self._sin_scroll.append(widget)
+
+    def _mouse_wheel_all(self, event):
+        bajo_cursor = self.winfo_containing(event.x_root, event.y_root)
+        if bajo_cursor in self._sin_scroll:
+            return
+        super()._mouse_wheel_all(event)
+
+
 def create_puntos_colineales_page(container):
     page = ctk.CTkFrame(container, corner_radius=0, fg_color="transparent")
+    body = PaginaDesplazable(page, corner_radius=0, fg_color="transparent")
+    body.pack(fill="both", expand=True)
 
     # --- 1. ENCABEZADO ---
-    header_frame = ctk.CTkFrame(page, corner_radius=0, fg_color="transparent")
+    header_frame = ctk.CTkFrame(body, corner_radius=0, fg_color="transparent")
     header_frame.pack(fill="x", padx=20, pady=(12, 4))
 
     lbl_title = ctk.CTkLabel(
@@ -393,7 +418,7 @@ def create_puntos_colineales_page(container):
     lbl_subtitle.pack(anchor="w", pady=(2, 0))
 
     # --- 2. TARJETA DE FORMULARIO (INPUTS) ---
-    form_card = ctk.CTkFrame(page, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
+    form_card = ctk.CTkFrame(body, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
     form_card.pack(fill="x", padx=20, pady=(0, 8))
 
     form_top = ctk.CTkFrame(form_card, fg_color="transparent")
@@ -468,7 +493,7 @@ def create_puntos_colineales_page(container):
     btn_clear.pack(side="left", pady=6)
 
     # --- 3. TARJETA DE MÉTRICAS (DATOS SEPARADOS Y DETALLADOS) ---
-    metrics_card = ctk.CTkFrame(page, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
+    metrics_card = ctk.CTkFrame(body, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
     metrics_card.pack(fill="x", padx=20, pady=(0, 8))
     metrics_card.columnconfigure((0, 1, 2, 3), weight=1, uniform="stat")
 
@@ -529,8 +554,9 @@ def create_puntos_colineales_page(container):
     val_notacion.grid(row=1, column=1, columnspan=2, sticky="w", pady=(0, 6))
 
     # --- 4. CONTENIDO INFERIOR: TABLA CTkTable Y PLANO EXPANDIDO ---
-    split_box = ctk.CTkFrame(page, corner_radius=0, fg_color="transparent")
-    split_box.pack(fill="both", expand=True, padx=20, pady=(0, 12))
+    split_box = ctk.CTkFrame(body, height=ALTURA_GRAFICA, corner_radius=0, fg_color="transparent")
+    split_box.pack(fill="x", padx=20, pady=(0, 12))
+    split_box.pack_propagate(False)
 
     # A) TABLA COMPACTA CON CTkTable
     table_card = ctk.CTkFrame(split_box, width=330, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
@@ -629,6 +655,7 @@ def create_puntos_colineales_page(container):
 
     canvas = FigureCanvasTkAgg(figure, master=graph_card)
     canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=(0, 10))
+    body.excluir_rueda(canvas.get_tk_widget())
     canvas.draw()
     habilitar_navegacion(ax, canvas)
 

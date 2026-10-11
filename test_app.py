@@ -14,6 +14,7 @@ from pages.puntos_colineales import (
     get_direccion_x,
     get_direccion_y,
     generar_puntos_trayectoria,
+    rasterizar_pixeles,
     clasificar_recta,
     redondear_pixel,
     setup_ejes,
@@ -30,6 +31,9 @@ from pages.triangulo import (
     clasificar_por_lados,
     clasificar_por_angulos,
     calcular_pendiente_segura,
+    generar_relleno,
+    ajustar_al_contorno,
+    render_triangle_plot,
     create_triangulo_page,
     current_triangle_data,
 )
@@ -219,6 +223,19 @@ class TestGraphicsApp(unittest.TestCase):
         self.assertGreater(len(current_triangle_data.get("table_points")), 0)
         self.assertFalse(current_triangle_data.get("es_colineal"))
 
+        # Caso DDA de cada lado: AB (1,1)→(7,2), BC (7,2)→(3,7), CA (3,7)→(1,1)
+        casos = current_triangle_data["casos"]
+        self.assertEqual(casos["AB"][0], "Positivo 1")
+        self.assertEqual(casos["BC"][0], "Negativo 3")
+        self.assertEqual(casos["CA"][0], "Positivo 4")
+
+        # Relleno: una línea DDA desde cada vértice por cada píxel de su lado opuesto
+        pixeles = current_triangle_data["pixeles"]
+        relleno = current_triangle_data["relleno"]
+        self.assertEqual(len(relleno), len(pixeles["AB"]) + len(pixeles["BC"]) + len(pixeles["CA"]))
+        self.assertEqual(relleno[0][0], (3, 7))                     # C -> AB
+        self.assertEqual(relleno[len(pixeles["AB"])][0], (1, 1))    # A -> BC
+
         # Probar limpieza
         clear_btn.invoke()
         self.assertFalse(current_triangle_data.get("has_data", False))
@@ -358,6 +375,99 @@ class TestGraphicsApp(unittest.TestCase):
         render_plot(ax, figure, canvas, view=((0, 4), (1, 5)))
         self.assertEqual(ax.get_xlim(), (0, 4))
         self.assertEqual(ax.get_ylim(), (1, 5))
+
+    def test_grafica_con_pixeles_dda(self):
+        # Positivo 1: la gráfica une los píxeles redondeados, no la recta ideal
+        puntos = generar_puntos_trayectoria(0, 0, 5, 2)
+        self.assertEqual(rasterizar_pixeles(puntos), [(0, 0), (1, 0), (2, 1), (3, 1), (4, 2), (5, 2)])
+
+        figure = Figure(figsize=(5, 5), dpi=100)
+        ax = figure.add_subplot(111)
+        canvas = FigureCanvasAgg(figure)
+        current_data.clear()
+        current_data.update(has_data=True, x1=0, y1=0, x2=5, y2=2, equation="y = 0.4x", table_points=puntos)
+        try:
+            render_plot(ax, figure, canvas)
+        finally:
+            current_data.clear()
+        recta = next(l for l in ax.get_lines() if l.get_label().startswith("Recta DDA"))
+        self.assertEqual(list(zip(recta.get_xdata(), recta.get_ydata())), rasterizar_pixeles(puntos))
+
+        # B con decimales se marca en su píxel: (11, 30.67) -> (11, 31), sobre la recta
+        puntos = generar_puntos_trayectoria(10, 30, 11, 30.67)
+        current_data.update(has_data=True, x1=10, y1=30, x2=11, y2=30.67, equation="y", table_points=puntos)
+        try:
+            render_plot(ax, figure, canvas)
+        finally:
+            current_data.clear()
+        marca_b = next(l for l in ax.get_lines() if l.get_label().startswith("B "))
+        self.assertEqual((marca_b.get_xdata()[0], marca_b.get_ydata()[0]), (11, 31))
+        self.assertEqual(marca_b.get_label(), "B (11, 31)")
+
+    def test_relleno_triangulo_desde_c(self):
+        pixeles_ab = rasterizar_pixeles(generar_puntos_trayectoria(0, 0, 6, 0))
+        relleno = generar_relleno(3, 4, pixeles_ab)
+        self.assertEqual(len(relleno), len(pixeles_ab))
+        for linea, destino in zip(relleno, pixeles_ab):
+            # Cada línea empieza en C y termina en un píxel de AB
+            self.assertEqual(linea[0], (3, 4))
+            self.assertEqual(linea[-1], destino)
+
+        # El plano del triángulo dibuja el relleno y los 3 lados con sus píxeles
+        figure = Figure(figsize=(5, 5), dpi=100)
+        ax = figure.add_subplot(111)
+        canvas = FigureCanvasAgg(figure)
+        current_triangle_data.clear()
+        current_triangle_data.update(
+            has_data=True, x1=0, y1=0, x2=6, y2=0, x3=3, y3=4, area=12, relleno=relleno,
+            pixeles={
+                "AB": pixeles_ab,
+                "BC": rasterizar_pixeles(generar_puntos_trayectoria(6, 0, 3, 4)),
+                "CA": rasterizar_pixeles(generar_puntos_trayectoria(3, 4, 0, 0)),
+            },
+        )
+        try:
+            render_triangle_plot(ax, figure, canvas, view=((0, 4), (1, 5)))
+        finally:
+            current_triangle_data.clear()
+        self.assertEqual(len(ax.collections[0].get_segments()), len(pixeles_ab))
+        self.assertEqual(ax.get_xlim(), (0, 4))
+
+    def test_relleno_no_sale_del_triangulo(self):
+        # Un píxel fuera del borde de su fila se recorre al borde; los de adentro no cambian
+        contorno = [[(0, 0), (4, 0)], [(4, 0), (3, 1), (2, 2)], [(2, 2), (1, 1), (0, 0)]]
+        self.assertEqual(ajustar_al_contorno([[(5, 0), (0, 1), (2, 1)]], contorno), [[(4, 0), (1, 1), (2, 1)]])
+
+        # Equilátero con C decimal: los vértices se ubican en su píxel y ningún
+        # píxel del relleno queda fuera de los lados
+        app = ctk.CTk()
+        app.withdraw()
+        page = create_triangulo_page(app)
+        entradas = [w for w in self._todos(page) if isinstance(w, ctk.CTkEntry)]
+        for entrada, valor in zip(entradas, ["0", "0", "10", "0", "5", "8.660254"]):
+            entrada.delete(0, "end")
+            entrada.insert(0, valor)
+        next(w for w in self._todos(page) if isinstance(w, ctk.CTkButton) and "Calcular" in w.cget("text")).invoke()
+        try:
+            datos = current_triangle_data
+            self.assertEqual(datos["tipo_lados"], "Equilátero")
+            self.assertEqual(datos["pixeles"]["CA"][0], (5, 9))
+            filas = {}
+            for pixeles in datos["pixeles"].values():
+                for x, y in pixeles:
+                    filas.setdefault(y, []).append(x)
+            for linea in datos["relleno"]:
+                for x, y in linea:
+                    self.assertTrue(min(filas[y]) <= x <= max(filas[y]))
+        finally:
+            current_triangle_data.clear()
+            app.destroy()
+
+    @staticmethod
+    def _todos(widget):
+        yield widget
+        for hijo in widget.winfo_children():
+            yield from TestGraphicsApp._todos(hijo)
 
     def test_ecuaciones_casos(self):
         self.assertEqual(get_ecuacion_recta(1, 2, get_pendiente(1, 2, 6, 2)), "y = 2")
