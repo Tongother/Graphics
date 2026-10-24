@@ -1,9 +1,17 @@
 """
-Gestor de páginas y navegación de la aplicación en CustomTkinter.
+Registro de páginas y navegación. Para agregar un módulo nuevo basta con
+añadir su entrada a PAGINAS: main.py arma el menú lateral a partir de esta lista.
 """
-from pages.triangulo import create_triangulo_page
-from pages.puntos_colineales import create_puntos_colineales_page
 from pages.circulo import create_circulo_page
+from pages.puntos_colineales import create_puntos_colineales_page
+from pages.triangulo import create_triangulo_page
+
+# (clave, texto del menú, icono en public/<icono>.svg, función que crea la página)
+PAGINAS = [
+    ("puntos_colineales", "Puntos Colineales", "trending-up-down", create_puntos_colineales_page),
+    ("triangulo", "Trazado de Triángulo", "triangle", create_triangulo_page),
+    ("circulo", "Circunferencia y Círculo", "circle", create_circulo_page),
+]
 
 _pages = {}
 _current_page = None
@@ -16,22 +24,12 @@ def register_nav_listener(callback):
 
 
 def init_pages(container):
-    global _pages, _current_page
-    puntos_page = create_puntos_colineales_page(container)
-    triangulo_page = create_triangulo_page(container)
-    circulo_page = create_circulo_page(container)
-
-    _pages.update({
-        "puntos_colineales": puntos_page,
-        "triangulo": triangulo_page,
-        "futuro": triangulo_page,
-        "circulo": circulo_page,
-    })
-
-    for page in {puntos_page, triangulo_page, circulo_page}:
+    for clave, _, _, crear in PAGINAS:
+        page = crear(container)
         page.grid(row=0, column=0, sticky="nsew")
+        _pages[clave] = page
 
-    show_page("puntos_colineales")
+    show_page(PAGINAS[0][0])
 
 
 def show_page(page_name):

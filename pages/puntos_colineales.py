@@ -1,241 +1,42 @@
-import math
-from fractions import Fraction
+"""
+Página de Puntos Colineales: recta entre A y B trazada con DDA.
+La lógica (pendiente, casos, trayectoria) está en core/recta.py.
+"""
 from tkinter import messagebox
 import customtkinter as ctk
-from CTkTable import CTkTable
 
-from matplotlib.backend_tools import Cursors
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-
-from pages.icons import get_icon
+from core.recta import analizar_recta, rasterizar_pixeles, redondear_pixel
+from ui.plano import anotar_punto, aplicar_vista, crear_plano, dibujar_leyenda, setup_ejes
+from ui.tema import es_oscuro, register_plot_updater
+from ui.widgets import (
+    ALTURA_GRAFICA,
+    FONDO_TILE,
+    TEXTO_SECUNDARIO,
+    TileMetrica,
+    botones_calcular_limpiar,
+    contenido_tabla,
+    crear_pagina,
+    encabezado_grafica,
+    escribir_valores,
+    grupo_entradas,
+    leer_numeros,
+    tarjeta,
+    tarjeta_metricas,
+)
 
 # Almacenamiento de datos actuales para repintado reactivo
 current_data = {}
-_plot_callbacks = []
 
-
-def register_plot_updater(callback):
-    if callback not in _plot_callbacks:
-        _plot_callbacks.append(callback)
-
-
-def notify_theme_to_plot():
-    for cb in _plot_callbacks:
-        try:
-            cb()
-        except Exception:
-            pass
-
-
-def get_pendiente(x1, y1, x2, y2):
-    pendiente = (y2 - y1) / (x2 - x1)
-    # Evita el "-0" que resulta de dividir 0 entre un número negativo
-    return 0.0 if pendiente == 0 else pendiente
-
-
-def get_ordenada(x1, y1, pendiente):
-    return y1 - pendiente * x1
-
-
-def get_ecuacion_recta(x1, y1, pendiente):
-    ordenada = get_ordenada(x1, y1, pendiente)
-    if pendiente == 0:
-        return f"y = {ordenada:g}"
-
-    if pendiente == 1:
-        termino_x = "x"
-    elif pendiente == -1:
-        termino_x = "-x"
-    else:
-        termino_x = f"{pendiente:g}x"
-
-    if ordenada == 0:
-        return f"y = {termino_x}"
-    signo = "+" if ordenada > 0 else "-"
-    return f"y = {termino_x} {signo} {abs(ordenada):g}"
-
-
-def formatear_pendiente(dx, dy):
-    """Pendiente como fracción reducida (2/5) cuando es exacta; si no, en decimal."""
-    m = dy / dx
-    fraccion = (Fraction(str(dy)) / Fraction(str(dx))).limit_denominator(1000)
-    texto = str(fraccion) if abs(float(fraccion) - m) < 1e-9 else f"{m:.4g}"
-    return texto.replace("-", "−")
-
-
-def clasificar_recta(dx, dy):
-    """
-    Identifica el caso de trazo según los incrementos ΔX y ΔY, con la agrupación
-    del documento: 4 positivos, 4 negativos y 3 especiales (45°, horizontal y
-    vertical). Cada inclinación se dibuja en los dos sentidos y cada sentido es
-    un caso distinto.
-    Retorna una tupla (caso, detalle, notacion).
-    """
-    if dx == 0 and dy == 0:
-        # No es un caso del documento: solo protege contra A = B
-        return "Un solo punto", "A y B son iguales: no hay recorrido", "Sin recorrido: ΔX = 0 y ΔY = 0"
-
-    sx = "+" if dx > 0 else "−"
-    sy = "+" if dy > 0 else "−"
-    sentido_x = "izquierda → derecha" if dx > 0 else "derecha → izquierda"
-
-    if dy == 0:
-        return "Especial: horizontal", sentido_x, f"m = 0 · Xₖ₊₁ = Xₖ {sx} 1 · Y no cambia"
-
-    if dx == 0:
-        sentido_y = "abajo → arriba" if dy > 0 else "arriba → abajo"
-        return "Especial: vertical", sentido_y, f"m = Error (indefinida) · Yₖ₊₁ = Yₖ {sy} 1 · X no cambia"
-
-    if abs(abs(dx) - abs(dy)) < 1e-9:
-        inciso, flecha = {
-            ("+", "+"): ("a", "↗"),
-            ("+", "−"): ("b", "↘"),
-            ("−", "−"): ("c", "↙"),
-            ("−", "+"): ("d", "↖"),
-        }[(sx, sy)]
-        m = "1" if sx == sy else "−1"
-        sentido_y = "subiendo" if dy > 0 else "bajando"
-        return (
-            f"Especial 45° {inciso}) {flecha}",
-            f"Diagonal, {sentido_x}, {sentido_y}",
-            f"m = {m} · Xₖ₊₁ = Xₖ {sx} 1 · Yₖ₊₁ = Yₖ {sy} 1"
-        )
-
-    acostada = abs(dy) < abs(dx)
-    if (dx > 0) == (dy > 0):
-        # Positivo 1 y 3 van de izquierda a derecha; 2 y 4 de derecha a izquierda
-        numero = (1 if acostada else 3) + (0 if dx > 0 else 1)
-        grupo, trazo, clase = "Positivo", "/", "+m<1" if acostada else "+m>1"
-        paso_m, paso_inv = "m", "1/m"
-    else:
-        # Negativo 1 y 3 van de derecha a izquierda; 2 y 4 de izquierda a derecha
-        numero = (1 if acostada else 3) + (0 if dx < 0 else 1)
-        grupo, trazo, clase = "Negativo", "\\", "|−m|<1" if acostada else "|−m|>1"
-        paso_m, paso_inv = "|m|", "1/|m|"
-
-    if acostada:
-        formula = f"Xₖ₊₁ = Xₖ {sx} 1 · Yₖ₊₁ = Yₖ {sy} {paso_m}"
-    else:
-        formula = f"Yₖ₊₁ = Yₖ {sy} 1 · Xₖ₊₁ = Xₖ {sx} {paso_inv}"
-
-    inclinacion = "Acostada" if acostada else "Parada"
-    return (
-        f"{grupo} {numero}",
-        f"{inclinacion} {trazo}, {sentido_x}",
-        f"{clase}, m = {formatear_pendiente(dx, dy)} · {formula}"
-    )
-
-
-def redondear_pixel(valor):
-    """
-    Posición del píxel: el entero más cercano, con las mitades hacia arriba.
-    No se usa round() porque redondea 0.5 al par (round(2.5) == 2).
-    """
-    return math.floor(valor + 0.5)
-
-
-def get_direccion_x(dx):
-    if dx > 0:
-        return "Izquierda a Derecha"
-    elif dx < 0:
-        return "Derecha a Izquierda"
-    return "Sin cambio horizontal"
-
-
-def get_direccion_y(dy):
-    if dy > 0:
-        return "Abajo a Arriba"
-    elif dy < 0:
-        return "Arriba a Abajo"
-    return "Sin cambio vertical"
-
-
-def get_comportamiento_pendiente(m):
-    if m > 0:
-        return "Ascendente"
-    elif m < 0:
-        return "Descendente"
-    return "Horizontal"
-
-
-def generar_puntos_trayectoria(x1, y1, x2, y2):
-    dx = x2 - x1
-    dy = y2 - y1
-    pasos = int(max(abs(dx), abs(dy)))
-    puntos = []
-
-    if dx == 0 and dy == 0:
-        return [(0, x1, y1)]
-    if pasos == 0:
-        # Puntos distintos a menos de una unidad: un solo paso de A a B
-        pasos = 1
-
-    # Un eje avanza ±1 por paso y el otro ±|m| (o ±1/|m|). Se calcula A + i·paso
-    # en lugar de sumar el paso en cada vuelta para no acumular error de redondeo.
-    step_x = dx / pasos
-    step_y = dy / pasos
-
-    for i in range(pasos + 1):
-        px = x1 + i * step_x
-        py = y1 + i * step_y
-        if abs(px - round(px)) < 1e-7:
-            px = int(round(px))
-        else:
-            px = round(px, 4)
-        if abs(py - round(py)) < 1e-7:
-            py = int(round(py))
-        else:
-            py = round(py, 4)
-        puntos.append((i, px, py))
-
-    return puntos
-
-
-def rasterizar_pixeles(puntos):
-    """Píxeles que enciende el DDA: cada punto (paso, X, Y) redondeado a enteros."""
-    return [(redondear_pixel(px), redondear_pixel(py)) for _, px, py in puntos]
-
-
-def setup_ejes(ax, figure, limit=10, is_dark=True):
-    fig_bg = "#2B2B2B" if is_dark else "#F2F2F2"
-    ax_bg = "#1A1A1A" if is_dark else "#FFFFFF"
-    text_color = "#E0E0E0" if is_dark else "#1A1A1A"
-    subtext = "#9E9E9E" if is_dark else "#616161"
-    grid_color = "#2E2E2E" if is_dark else "#E0E0E0"
-    origin_color = "#616161" if is_dark else "#9E9E9E"
-    spine_color = "#444444" if is_dark else "#D0D0D0"
-
-    figure.patch.set_facecolor(fig_bg)
-    ax.set_facecolor(ax_bg)
-
-    ax.set_title("Plano Cartesiano", color=text_color, fontsize=12, fontweight="bold", pad=12)
-    ax.set_xlabel("Eje X", color=subtext, fontsize=10, labelpad=6)
-    ax.set_ylabel("Eje Y", color=subtext, fontsize=10, labelpad=6)
-
-    ax.tick_params(colors=subtext, labelsize=9)
-    for spine in ax.spines.values():
-        spine.set_color(spine_color)
-        spine.set_linewidth(0.8)
-
-    ax.grid(True, linestyle="--", linewidth=0.6, color=grid_color, alpha=0.7)
-    ax.axhline(0, color=origin_color, linewidth=1.0, linestyle="-")
-    ax.axvline(0, color=origin_color, linewidth=1.0, linestyle="-")
-    ax.set_xlim(-limit, limit)
-    ax.set_ylim(-limit, limit)
-    ax.set_aspect("equal", adjustable="box")
+ENCABEZADO_TABLA = ["Paso", "Xₖ", "Yₖ", "Píxel"]
 
 
 def render_plot(ax, figure, canvas, view=None):
     """Redibuja el plano; view = (xlim, ylim) conserva el zoom y la posición actuales."""
-    is_dark = (ctk.get_appearance_mode().lower() == "dark")
+    is_dark = es_oscuro()
     line_color = "#3B82F6" if is_dark else "#2563EB"
     pt_color = "#38BDF8" if is_dark else "#0284C7"
     pt_a_color = "#34D399" if is_dark else "#059669"
     pt_b_color = "#A78BFA" if is_dark else "#7C3AED"
-    fig_bg = "#2B2B2B" if is_dark else "#F2F2F2"
-    border_color = "#444444" if is_dark else "#D0D0D0"
-    text_color = "#E0E0E0" if is_dark else "#1A1A1A"
 
     ax.clear()
     limit = current_data.get("limit", 10)
@@ -269,542 +70,144 @@ def render_plot(ax, figure, canvas, view=None):
         # Punto A y Punto B (si coinciden se dibuja uno solo)
         texto_a = f"A = B ({x1:g}, {y1:g})" if mismo_punto else f"A ({x1:g}, {y1:g})"
         ax.plot([x1], [y1], marker="o", markersize=9, color=pt_a_color, linestyle="None", label=texto_a)
+        anotar_punto(ax, texto_a, x1, y1, pt_a_color, is_dark)
         if not mismo_punto:
-            ax.plot([x2], [y2], marker="s", markersize=9, color=pt_b_color, linestyle="None", label=f"B ({x2:g}, {y2:g})")
+            texto_b = f"B ({x2:g}, {y2:g})"
+            ax.plot([x2], [y2], marker="s", markersize=9, color=pt_b_color, linestyle="None", label=texto_b)
+            anotar_punto(ax, texto_b, x2, y2, pt_b_color, is_dark)
 
-        # Anotaciones
-        bbox_a = dict(boxstyle="round,pad=0.35", fc=fig_bg, ec=pt_a_color, lw=1.2, alpha=0.95)
-        ax.annotate(
-            texto_a,
-            (x1, y1),
-            textcoords="offset points",
-            xytext=(0, 14),
-            ha="center",
-            fontsize=9,
-            fontweight="bold",
-            color=pt_a_color,
-            bbox=bbox_a
-        )
+        dibujar_leyenda(ax, is_dark)
 
-        if not mismo_punto:
-            bbox_b = dict(boxstyle="round,pad=0.35", fc=fig_bg, ec=pt_b_color, lw=1.2, alpha=0.95)
-            ax.annotate(
-                f"B ({x2:g}, {y2:g})",
-                (x2, y2),
-                textcoords="offset points",
-                xytext=(0, 14),
-                ha="center",
-                fontsize=9,
-                fontweight="bold",
-                color=pt_b_color,
-                bbox=bbox_b
-            )
-
-        legend = ax.legend(
-            loc="best",
-            fontsize=8.5,
-            framealpha=0.88,
-            facecolor=fig_bg,
-            edgecolor=border_color
-        )
-        for text in legend.get_texts():
-            text.set_color(text_color)
-
-    if view is not None:
-        ax.set_xlim(view[0])
-        ax.set_ylim(view[1])
-
+    aplicar_vista(ax, view)
     figure.tight_layout()
     canvas.draw()
 
 
-def habilitar_navegacion(ax, canvas):
-    """
-    Zoom con la rueda del mouse (centrado en el cursor) y arrastre con clic
-    izquierdo para mover el plano. Solo cambian los límites de los ejes, así que
-    la gráfica conserva su tamaño.
-    """
-    arrastre = {}
-
-    def on_scroll(event):
-        if event.inaxes is not ax:
-            return
-        # Rueda hacia arriba acerca; cada muesca escala 1.2x
-        factor = 1.2 ** -event.step
-        (x0, x1), (y0, y1) = ax.get_xlim(), ax.get_ylim()
-        if not 1 <= (x1 - x0) * factor <= 10000:
-            return
-        cx, cy = event.xdata, event.ydata
-        ax.set_xlim(cx - (cx - x0) * factor, cx + (x1 - cx) * factor)
-        ax.set_ylim(cy - (cy - y0) * factor, cy + (y1 - cy) * factor)
-        canvas.draw_idle()
-
-    def on_press(event):
-        if event.inaxes is not ax or event.button != 1:
-            return
-        arrastre.update(x=event.x, y=event.y, xlim=ax.get_xlim(), ylim=ax.get_ylim())
-        canvas.set_cursor(Cursors.MOVE)
-
-    def on_motion(event):
-        if not arrastre:
-            return
-        # Desplazamiento en píxeles de pantalla convertido a unidades del plano
-        (x0, x1), (y0, y1) = arrastre["xlim"], arrastre["ylim"]
-        dx = (event.x - arrastre["x"]) * (x1 - x0) / ax.bbox.width
-        dy = (event.y - arrastre["y"]) * (y1 - y0) / ax.bbox.height
-        ax.set_xlim(x0 - dx, x1 - dx)
-        ax.set_ylim(y0 - dy, y1 - dy)
-        canvas.draw_idle()
-
-    def on_release(event):
-        if arrastre:
-            arrastre.clear()
-            canvas.set_cursor(Cursors.POINTER)
-
-    canvas.mpl_connect("scroll_event", on_scroll)
-    canvas.mpl_connect("button_press_event", on_press)
-    canvas.mpl_connect("motion_notify_event", on_motion)
-    canvas.mpl_connect("button_release_event", on_release)
-
-
-# Alto del bloque tabla + plano; puede superar la ventana porque la página tiene scroll
-ALTURA_GRAFICA = 760
-
-
-class PaginaDesplazable(ctk.CTkScrollableFrame):
-    """
-    Contenido de una página con scroll vertical. La rueda del mouse sobre la
-    gráfica no mueve la página, porque ahí la rueda hace zoom en el plano.
-    """
-
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
-        self._sin_scroll = []
-
-    def excluir_rueda(self, widget):
-        self._sin_scroll.append(widget)
-
-    def _mouse_wheel_all(self, event):
-        bajo_cursor = self.winfo_containing(event.x_root, event.y_root)
-        if bajo_cursor in self._sin_scroll:
-            return
-        super()._mouse_wheel_all(event)
-
-
 def create_puntos_colineales_page(container):
-    page = ctk.CTkFrame(container, corner_radius=0, fg_color="transparent")
-    body = PaginaDesplazable(page, corner_radius=0, fg_color="transparent")
-    body.pack(fill="both", expand=True)
-
-    # --- 1. ENCABEZADO ---
-    header_frame = ctk.CTkFrame(body, corner_radius=0, fg_color="transparent")
-    header_frame.pack(fill="x", padx=20, pady=(12, 4))
-
-    lbl_title = ctk.CTkLabel(
-        header_frame,
-        text="Trazado y Análisis de Rectas",
-        font=ctk.CTkFont(size=20, weight="bold"),
-        anchor="w"
+    page, body = crear_pagina(
+        container,
+        "Trazado y Análisis de Rectas",
+        "Cálculo algebraico de pendiente, vector director y rasterización discreta.",
     )
-    lbl_title.pack(anchor="w")
 
-    lbl_subtitle = ctk.CTkLabel(
-        header_frame,
-        text="Cálculo algebraico de pendiente, vector director y rasterización discreta.",
-        font=ctk.CTkFont(size=12),
-        text_color="gray",
-        anchor="w"
-    )
-    lbl_subtitle.pack(anchor="w", pady=(2, 0))
-
-    # --- 2. TARJETA DE FORMULARIO (INPUTS) ---
-    form_card = ctk.CTkFrame(body, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
+    # --- 1. FORMULARIO (INPUTS) ---
+    form_card = tarjeta(body)
     form_card.pack(fill="x", padx=20, pady=(0, 8))
 
     form_top = ctk.CTkFrame(form_card, fg_color="transparent")
     form_top.pack(fill="x", padx=16, pady=8)
 
-    # Punto A
-    box_a = ctk.CTkFrame(form_top, fg_color="transparent")
-    box_a.pack(side="left", padx=(0, 16))
-
-    lbl_pt_a = ctk.CTkLabel(box_a, text="Punto A (Origen)", font=ctk.CTkFont(size=12, weight="bold"))
-    lbl_pt_a.grid(row=0, column=0, columnspan=4, sticky="w", pady=(0, 4))
-
-    lbl_xa = ctk.CTkLabel(box_a, text="X₁:", font=ctk.CTkFont(size=12))
-    lbl_xa.grid(row=1, column=0, padx=(0, 4))
-    entryXA = ctk.CTkEntry(box_a, width=65, height=32, corner_radius=6, justify="center")
-    entryXA.grid(row=1, column=1, padx=(0, 12))
-
-    lbl_ya = ctk.CTkLabel(box_a, text="Y₁:", font=ctk.CTkFont(size=12))
-    lbl_ya.grid(row=1, column=2, padx=(0, 4))
-    entryYA = ctk.CTkEntry(box_a, width=65, height=32, corner_radius=6, justify="center")
-    entryYA.grid(row=1, column=3)
-
-    # Punto B
-    box_b = ctk.CTkFrame(form_top, fg_color="transparent")
-    box_b.pack(side="left", padx=(0, 20))
-
-    lbl_pt_b = ctk.CTkLabel(box_b, text="Punto B (Destino)", font=ctk.CTkFont(size=12, weight="bold"))
-    lbl_pt_b.grid(row=0, column=0, columnspan=4, sticky="w", pady=(0, 4))
-
-    lbl_xb = ctk.CTkLabel(box_b, text="X₂:", font=ctk.CTkFont(size=12))
-    lbl_xb.grid(row=1, column=0, padx=(0, 4))
-    entryXB = ctk.CTkEntry(box_b, width=65, height=32, corner_radius=6, justify="center")
-    entryXB.grid(row=1, column=1, padx=(0, 12))
-
-    lbl_yb = ctk.CTkLabel(box_b, text="Y₂:", font=ctk.CTkFont(size=12))
-    lbl_yb.grid(row=1, column=2, padx=(0, 4))
-    entryYB = ctk.CTkEntry(box_b, width=65, height=32, corner_radius=6, justify="center")
-    entryYB.grid(row=1, column=3)
-
-    # Botones con iconos vectoriales
-    actions_box = ctk.CTkFrame(form_top, fg_color="transparent")
-    actions_box.pack(side="left", fill="y", padx=4)
-
-    icon_play = get_icon("player-play", size=15, light_color="#FFFFFF", dark_color="#FFFFFF")
-    btn_calc = ctk.CTkButton(
-        actions_box,
-        text="  Calcular Trayectoria",
-        image=icon_play,
-        compound="left",
-        height=34,
-        corner_radius=8,
-        font=ctk.CTkFont(size=12, weight="bold"),
-        command=lambda: calculate()
+    entradas = (
+        grupo_entradas(form_top, "Punto A (Origen)", ("X₁:", "Y₁:"))
+        + grupo_entradas(form_top, "Punto B (Destino)", ("X₂:", "Y₂:"), padx_derecho=20)
     )
-    btn_calc.pack(side="left", padx=(0, 8), pady=6)
+    botones_calcular_limpiar(form_top, "  Calcular Trayectoria", lambda: calculate(), lambda: clear())
 
-    icon_clear = get_icon("rotate", size=15, light_color="#1E293B", dark_color="#F8FAFC")
-    btn_clear = ctk.CTkButton(
-        actions_box,
-        text="  Limpiar",
-        image=icon_clear,
-        compound="left",
-        height=34,
-        corner_radius=8,
-        fg_color="transparent",
-        border_width=1,
-        border_color=("gray70", "gray40"),
-        text_color=("gray20", "gray85"),
-        font=ctk.CTkFont(size=12),
-        command=lambda: clear()
-    )
-    btn_clear.pack(side="left", pady=6)
-
-    # --- 3. TARJETA DE MÉTRICAS (DATOS SEPARADOS Y DETALLADOS) ---
-    metrics_card = ctk.CTkFrame(body, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
-    metrics_card.pack(fill="x", padx=20, pady=(0, 8))
-    metrics_card.columnconfigure((0, 1, 2, 3), weight=1, uniform="stat")
-
-    # Tile 1: Pendiente
-    tile_m = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=("gray92", "gray20"))
-    tile_m.grid(row=0, column=0, sticky="nsew", padx=6, pady=8)
-    ctk.CTkLabel(tile_m, text="PENDIENTE (m)", font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").pack(anchor="w", padx=12, pady=(6, 0))
-    val_m_num = ctk.CTkLabel(tile_m, text="--", font=ctk.CTkFont(size=17, weight="bold"), anchor="w")
-    val_m_num.pack(anchor="w", padx=12, pady=(1, 0))
-    val_m_sub1 = ctk.CTkLabel(tile_m, text="Comportamiento: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_m_sub1.pack(anchor="w", padx=12)
-    val_m_sub2 = ctk.CTkLabel(tile_m, text="Ángulo: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_m_sub2.pack(anchor="w", padx=12, pady=(0, 6))
-
-    # Tile 2: Ecuación
-    tile_eq = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=("gray92", "gray20"))
-    tile_eq.grid(row=0, column=1, sticky="nsew", padx=6, pady=8)
-    ctk.CTkLabel(tile_eq, text="ECUACIÓN DE LA RECTA", font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").pack(anchor="w", padx=12, pady=(6, 0))
-    val_eq_num = ctk.CTkLabel(tile_eq, text="--", font=ctk.CTkFont(size=17, weight="bold"), anchor="w")
-    val_eq_num.pack(anchor="w", padx=12, pady=(1, 0))
-    val_eq_sub1 = ctk.CTkLabel(tile_eq, text="Ordenada (b): --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_eq_sub1.pack(anchor="w", padx=12)
-    val_eq_sub2 = ctk.CTkLabel(tile_eq, text="Forma: Explícita", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_eq_sub2.pack(anchor="w", padx=12, pady=(0, 6))
-
-    # Tile 3: Incremento X
-    tile_dx = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=("gray92", "gray20"))
-    tile_dx.grid(row=0, column=2, sticky="nsew", padx=6, pady=8)
-    ctk.CTkLabel(tile_dx, text="INCREMENTO X (ΔX)", font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").pack(anchor="w", padx=12, pady=(6, 0))
-    val_dx_num = ctk.CTkLabel(tile_dx, text="--", font=ctk.CTkFont(size=17, weight="bold"), anchor="w")
-    val_dx_num.pack(anchor="w", padx=12, pady=(1, 0))
-    val_dx_sub1 = ctk.CTkLabel(tile_dx, text="Sentido: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_dx_sub1.pack(anchor="w", padx=12)
-    val_dx_sub2 = ctk.CTkLabel(tile_dx, text="Magnitud: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_dx_sub2.pack(anchor="w", padx=12, pady=(0, 6))
-
-    # Tile 4: Incremento Y
-    tile_dy = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=("gray92", "gray20"))
-    tile_dy.grid(row=0, column=3, sticky="nsew", padx=6, pady=8)
-    ctk.CTkLabel(tile_dy, text="INCREMENTO Y (ΔY)", font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").pack(anchor="w", padx=12, pady=(6, 0))
-    val_dy_num = ctk.CTkLabel(tile_dy, text="--", font=ctk.CTkFont(size=17, weight="bold"), anchor="w")
-    val_dy_num.pack(anchor="w", padx=12, pady=(1, 0))
-    val_dy_sub1 = ctk.CTkLabel(tile_dy, text="Sentido: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_dy_sub1.pack(anchor="w", padx=12)
-    val_dy_sub2 = ctk.CTkLabel(tile_dy, text="Magnitud: --", font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
-    val_dy_sub2.pack(anchor="w", padx=12, pady=(0, 6))
+    # --- 2. MÉTRICAS ---
+    metrics_card = tarjeta_metricas(body)
+    tile_m = TileMetrica(metrics_card, 0, "PENDIENTE (m)", "Comportamiento: --", "Ángulo: --")
+    tile_eq = TileMetrica(metrics_card, 1, "ECUACIÓN DE LA RECTA", "Ordenada (b): --", "Forma: Explícita")
+    tile_dx = TileMetrica(metrics_card, 2, "INCREMENTO X (ΔX)", "Sentido: --", "Magnitud: --")
+    tile_dy = TileMetrica(metrics_card, 3, "INCREMENTO Y (ΔY)", "Sentido: --", "Magnitud: --")
+    tiles = (tile_m, tile_eq, tile_dx, tile_dy)
 
     # Franja: caso de trazo detectado y su notación (ocupa las 4 columnas)
-    tile_caso = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=("gray92", "gray20"))
+    tile_caso = ctk.CTkFrame(metrics_card, corner_radius=10, fg_color=FONDO_TILE)
     tile_caso.grid(row=1, column=0, columnspan=4, sticky="nsew", padx=6, pady=(0, 8))
     ctk.CTkLabel(tile_caso, text="CASO DETECTADO", height=22, font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").grid(row=0, column=0, sticky="w", padx=(12, 10), pady=(6, 0))
     val_caso = ctk.CTkLabel(tile_caso, text="--", height=22, font=ctk.CTkFont(size=13, weight="bold"), anchor="w")
     val_caso.grid(row=0, column=1, sticky="w", pady=(6, 0))
-    val_caso_sub = ctk.CTkLabel(tile_caso, text="", height=22, font=ctk.CTkFont(size=10), text_color=("gray30", "gray70"), anchor="w")
+    val_caso_sub = ctk.CTkLabel(tile_caso, text="", height=22, font=ctk.CTkFont(size=10), text_color=TEXTO_SECUNDARIO, anchor="w")
     val_caso_sub.grid(row=0, column=2, sticky="w", padx=(12, 12), pady=(6, 0))
     ctk.CTkLabel(tile_caso, text="NOTACIÓN", height=22, font=ctk.CTkFont(size=9, weight="bold"), text_color="gray", anchor="w").grid(row=1, column=0, sticky="w", padx=(12, 10), pady=(0, 6))
     val_notacion = ctk.CTkLabel(tile_caso, text="--", height=22, font=ctk.CTkFont(size=12), anchor="w")
     val_notacion.grid(row=1, column=1, columnspan=2, sticky="w", pady=(0, 6))
 
-    # --- 4. CONTENIDO INFERIOR: TABLA CTkTable Y PLANO EXPANDIDO ---
+    # --- 3. TABLA Y PLANO ---
     split_box = ctk.CTkFrame(body, height=ALTURA_GRAFICA, corner_radius=0, fg_color="transparent")
     split_box.pack(fill="x", padx=20, pady=(0, 12))
     split_box.pack_propagate(False)
 
-    # A) TABLA COMPACTA CON CTkTable
-    table_card = ctk.CTkFrame(split_box, width=330, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
+    table_card = tarjeta(split_box, width=330)
     table_card.pack(side="left", fill="y", padx=(0, 10))
     table_card.pack_propagate(False)
+    tbl_count, tabla = contenido_tabla(table_card, "  Puntos Discretos", "0 pasos calculados")
+    tabla.mostrar([ENCABEZADO_TABLA])
 
-    tbl_header = ctk.CTkFrame(table_card, fg_color="transparent")
-    tbl_header.pack(fill="x", padx=12, pady=(10, 2))
-
-    icon_tbl = get_icon("table", size=16, light_color="#1E293B", dark_color="#F8FAFC")
-    tbl_title = ctk.CTkLabel(
-        tbl_header,
-        text="  Puntos Discretos",
-        image=icon_tbl,
-        compound="left",
-        font=ctk.CTkFont(size=12, weight="bold"),
-        anchor="w"
-    )
-    tbl_title.pack(anchor="w")
-
-    tbl_count = ctk.CTkLabel(table_card, text="0 pasos calculados", font=ctk.CTkFont(size=10), text_color="gray", anchor="w")
-    tbl_count.pack(fill="x", padx=12, pady=(0, 4))
-
-    # Scrollable frame contenedor de CTkTable
-    table_scroll = ctk.CTkScrollableFrame(table_card, fg_color="transparent", corner_radius=8)
-    table_scroll.pack(fill="both", expand=True, padx=4, pady=(0, 8))
-
-    default_table_data = [["Paso", "Xₖ", "Yₖ", "Píxel"]]
-    table_holder = {"table": None}
-
-    def render_table(rows_data):
-        if table_holder["table"] is not None:
-            table_holder["table"].destroy()
-
-        ctk_tbl = CTkTable(
-            table_scroll,
-            row=len(rows_data),
-            column=4,
-            width=70,
-            values=rows_data,
-            header_color=("#3B82F6", "#1D4ED8"),
-            colors=[("gray95", "#21252D"), ("gray90", "#1A1D24")],
-            hover=True,
-            hover_color=("#BFDBFE", "#1E3A8A"),
-            corner_radius=8,
-            font=ctk.CTkFont(size=11),
-            justify="center"
-        )
-        ctk_tbl.pack(fill="x", expand=True)
-        table_holder["table"] = ctk_tbl
-
-    render_table(default_table_data)
-
-    # B) PLANO CARTESIANO GIGANTE (Ocupa todo el espacio restante disponible)
-    graph_card = ctk.CTkFrame(split_box, corner_radius=12, border_width=1, border_color=("gray85", "gray25"))
+    graph_card = tarjeta(split_box)
     graph_card.pack(side="left", fill="both", expand=True)
-
-    grp_header = ctk.CTkFrame(graph_card, fg_color="transparent")
-    grp_header.pack(fill="x", padx=14, pady=(10, 4))
-
-    icon_grid = get_icon("grid-dots", size=16, light_color="#2563EB", dark_color="#3B82F6")
-    grp_title = ctk.CTkLabel(
-        grp_header,
-        text="  Visualizador Geométrico",
-        image=icon_grid,
-        compound="left",
-        font=ctk.CTkFont(size=12, weight="bold"),
-        anchor="w"
-    )
-    grp_title.pack(side="left")
-
-    icon_centrar = get_icon("focus-centered", size=14, light_color="#1E293B", dark_color="#F8FAFC")
-    btn_centrar = ctk.CTkButton(
-        grp_header,
-        text=" Centrar vista",
-        image=icon_centrar,
-        compound="left",
-        width=0,
-        height=26,
-        corner_radius=6,
-        fg_color="transparent",
-        border_width=1,
-        border_color=("gray70", "gray40"),
-        text_color=("gray20", "gray85"),
-        font=ctk.CTkFont(size=11),
-        command=lambda: restablecer_vista()
-    )
-    btn_centrar.pack(side="right")
-
-    grp_info = ctk.CTkLabel(grp_header, text="Rueda: zoom · Arrastrar: mover", font=ctk.CTkFont(size=10), text_color="gray", anchor="e")
-    grp_info.pack(side="right", padx=(0, 10))
-
-    figure = Figure(figsize=(7, 5), dpi=100)
-    ax = figure.add_subplot(111)
-    setup_ejes(ax, figure, limit=10, is_dark=(ctk.get_appearance_mode().lower() == "dark"))
-
-    canvas = FigureCanvasTkAgg(figure, master=graph_card)
-    canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=(0, 10))
-    body.excluir_rueda(canvas.get_tk_widget())
-    canvas.draw()
-    habilitar_navegacion(ax, canvas)
+    encabezado_grafica(graph_card, "  Visualizador Geométrico", "grid-dots", lambda: restablecer_vista())
+    figure, ax, canvas = crear_plano(graph_card, body)
 
     # --- LÓGICA DE CONTROL ---
     def calculate():
         try:
-            x1 = float(entryXA.get().strip())
-            y1 = float(entryYA.get().strip())
-            x2 = float(entryXB.get().strip())
-            y2 = float(entryYB.get().strip())
-            if x1.is_integer(): x1 = int(x1)
-            if y1.is_integer(): y1 = int(y1)
-            if x2.is_integer(): x2 = int(x2)
-            if y2.is_integer(): y2 = int(y2)
+            x1, y1, x2, y2 = leer_numeros(entradas)
         except ValueError:
             messagebox.showerror("Dato Inválido", "Por favor ingresa coordenadas numéricas válidas.")
             return
 
-        delta_x = x2 - x1
-        delta_y = y2 - y1
-        dir_x = get_direccion_x(delta_x)
-        dir_y = get_direccion_y(delta_y)
-        caso, caso_detalle, notacion = clasificar_recta(delta_x, delta_y)
-
-        max_val = max(abs(x1), abs(y1), abs(x2), abs(y2))
-        if max_val == 0:
-            max_val = 10
-        margin = max(2, int(max_val * 0.15) + 1)
-        limit = max_val + margin
-
-        if delta_x == 0 and delta_y == 0:
-            # Un solo punto: no hay recta, pendiente ni ángulo
-            pendiente = ordenada = angulo = None
-            comportamiento = "Sin dirección (un solo punto)"
-            equation = f"Punto ({x1:g}, {y1:g})"
-        elif delta_x == 0:
-            # Recta vertical: la pendiente es indefinida (división entre cero)
-            pendiente = ordenada = None
-            comportamiento = "Vertical"
-            angulo = 90.0
-            equation = f"x = {x1:g}"
-        else:
-            pendiente = get_pendiente(x1, y1, x2, y2)
-            ordenada = get_ordenada(x1, y1, pendiente)
-            comportamiento = get_comportamiento_pendiente(pendiente)
-            angulo = math.degrees(math.atan(pendiente))
-            equation = get_ecuacion_recta(x1, y1, pendiente)
-
-        table_points = generar_puntos_trayectoria(x1, y1, x2, y2)
-
+        datos = analizar_recta(x1, y1, x2, y2)
         current_data.clear()
-        current_data.update({
-            "has_data": True,
-            "x1": x1,
-            "y1": y1,
-            "x2": x2,
-            "y2": y2,
-            "pendiente": pendiente,
-            "ordenada": ordenada,
-            "comportamiento": comportamiento,
-            "angulo": angulo,
-            "equation": equation,
-            "caso": caso,
-            "notacion": notacion,
-            "delta_x": delta_x,
-            "delta_y": delta_y,
-            "dir_x": dir_x,
-            "dir_y": dir_y,
-            "limit": limit,
-            "table_points": table_points,
-        })
+        current_data.update(datos, has_data=True)
 
-        # Actualizar datos separados de manera clara en las 4 tarjetas
-        # 1. Pendiente
-        val_m_num.configure(text=f"{pendiente:g}" if pendiente is not None else "Indefinida")
-        val_m_sub1.configure(text=f"Sentido: {comportamiento}")
-        val_m_sub2.configure(text=f"Ángulo: {angulo:.1f}°" if angulo is not None else "Ángulo: --")
+        pendiente, ordenada, angulo = datos["pendiente"], datos["ordenada"], datos["angulo"]
+        delta_x, delta_y = datos["delta_x"], datos["delta_y"]
 
-        # 2. Ecuación
-        val_eq_num.configure(text=equation)
+        tile_m.mostrar(
+            f"{pendiente:g}" if pendiente is not None else "Indefinida",
+            f"Sentido: {datos['comportamiento']}",
+            f"Ángulo: {angulo:.1f}°" if angulo is not None else "Ángulo: --",
+        )
+
         if ordenada is not None:
-            val_eq_sub1.configure(text=f"Ordenada (b): {ordenada:g}")
-            val_eq_sub2.configure(text="Forma: y = mx + b")
+            sub_eq = (f"Ordenada (b): {ordenada:g}", "Forma: y = mx + b")
         elif delta_y != 0:
-            val_eq_sub1.configure(text="Ordenada (b): no existe")
-            val_eq_sub2.configure(text="Forma: x = constante")
+            sub_eq = ("Ordenada (b): no existe", "Forma: x = constante")
         else:
-            val_eq_sub1.configure(text="Ordenada (b): no existe")
-            val_eq_sub2.configure(text="Forma: punto aislado")
+            sub_eq = ("Ordenada (b): no existe", "Forma: punto aislado")
+        tile_eq.mostrar(datos["equation"], *sub_eq)
 
-        # 3. Incremento X
-        val_dx_num.configure(text=f"{delta_x:+g}" if delta_x != 0 else "0")
-        val_dx_sub1.configure(text=f"Sentido: {dir_x}")
-        val_dx_sub2.configure(text=f"Magnitud: |ΔX| = {abs(delta_x):g}")
+        tile_dx.mostrar(
+            f"{delta_x:+g}" if delta_x != 0 else "0",
+            f"Sentido: {datos['dir_x']}",
+            f"Magnitud: |ΔX| = {abs(delta_x):g}",
+        )
+        tile_dy.mostrar(
+            f"{delta_y:+g}" if delta_y != 0 else "0",
+            f"Sentido: {datos['dir_y']}",
+            f"Magnitud: |ΔY| = {abs(delta_y):g}",
+        )
 
-        # 4. Incremento Y
-        val_dy_num.configure(text=f"{delta_y:+g}" if delta_y != 0 else "0")
-        val_dy_sub1.configure(text=f"Sentido: {dir_y}")
-        val_dy_sub2.configure(text=f"Magnitud: |ΔY| = {abs(delta_y):g}")
+        val_caso.configure(text=datos["caso"])
+        val_caso_sub.configure(text=datos["caso_detalle"])
+        val_notacion.configure(text=datos["notacion"])
 
-        # 5. Caso detectado
-        val_caso.configure(text=caso)
-        val_caso_sub.configure(text=caso_detalle)
-        val_notacion.configure(text=notacion)
+        # Tabla: valores con decimales y el píxel redondeado que les corresponde
+        filas = [list(ENCABEZADO_TABLA)]
+        for paso, px, py in datos["table_points"]:
+            filas.append([str(paso), f"{px:.2f}", f"{py:.2f}", f"({redondear_pixel(px)}, {redondear_pixel(py)})"])
+        tabla.mostrar(filas)
+        tbl_count.configure(text=f"{len(datos['table_points'])} puntos calculados")
 
-        # Llenar CTkTable: valores con decimales y el píxel redondeado que les corresponde
-        new_table_data = [list(default_table_data[0])]
-        for paso, px, py in table_points:
-            pixel = f"({redondear_pixel(px)}, {redondear_pixel(py)})"
-            new_table_data.append([str(paso), f"{px:.2f}", f"{py:.2f}", pixel])
-        render_table(new_table_data)
-
-        tbl_count.configure(text=f"{len(table_points)} puntos calculados")
-
-        # Repintar gráfica
         render_plot(ax, figure, canvas)
 
     def clear():
-        entryXA.delete(0, "end")
-        entryYA.delete(0, "end")
-        entryXB.delete(0, "end")
-        entryYB.delete(0, "end")
-
-        val_m_num.configure(text="--")
-        val_m_sub1.configure(text="Comportamiento: --")
-        val_m_sub2.configure(text="Ángulo: --")
-
-        val_eq_num.configure(text="--")
-        val_eq_sub1.configure(text="Ordenada (b): --")
-        val_eq_sub2.configure(text="Forma: Explícita")
-
-        val_dx_num.configure(text="--")
-        val_dx_sub1.configure(text="Sentido: --")
-        val_dx_sub2.configure(text="Magnitud: --")
-
-        val_dy_num.configure(text="--")
-        val_dy_sub1.configure(text="Sentido: --")
-        val_dy_sub2.configure(text="Magnitud: --")
+        for entry in entradas:
+            entry.delete(0, "end")
+        for tile in tiles:
+            tile.limpiar()
 
         val_caso.configure(text="--")
         val_caso_sub.configure(text="")
         val_notacion.configure(text="--")
 
-        render_table(default_table_data)
+        tabla.mostrar([ENCABEZADO_TABLA])
         tbl_count.configure(text="0 pasos calculados")
         current_data.clear()
 
         render_plot(ax, figure, canvas)
-        entryXA.focus_set()
+        entradas[0].focus_set()
 
     def update_plot():
         # Cambio de tema: se conserva el zoom y la posición que dejó el usuario
@@ -819,9 +222,6 @@ def create_puntos_colineales_page(container):
     register_plot_updater(update_plot)
 
     # Valores iniciales para facilitar la visualización inmediata
-    entryXA.insert(0, "1")
-    entryYA.insert(0, "2")
-    entryXB.insert(0, "5")
-    entryYB.insert(0, "8")
+    escribir_valores(entradas, (1, 2, 5, 8))
 
     return page

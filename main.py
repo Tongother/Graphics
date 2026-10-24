@@ -1,12 +1,13 @@
 """
 Ventana Principal - Computación Gráfica
-Construida con CustomTkinter, iconos vectoriales nativos (CTkImage) y switch interactivo.
+Barra lateral con el menú (generado desde pages.index.PAGINAS), switch de tema
+y contenedor donde se apilan las páginas.
 """
 import customtkinter as ctk
 
-from pages.index import init_pages, show_page, register_nav_listener
-from pages.puntos_colineales import notify_theme_to_plot
-from pages.icons import get_icon
+from pages.index import PAGINAS, init_pages, show_page, register_nav_listener
+from ui.icons import get_icon
+from ui.tema import notify_theme_to_plot
 
 # 1. Configuración de tema visual
 ctk.set_appearance_mode("Dark")
@@ -53,63 +54,28 @@ logo_sub.pack(padx=22, pady=(2, 20), anchor="w")
 sep = ctk.CTkFrame(sidebar, height=1, fg_color=("gray80", "gray25"))
 sep.pack(fill="x", padx=16, pady=(0, 16))
 
-# Menú de Navegación con Iconos
+# Menú de Navegación con Iconos (una entrada por página registrada)
 nav_buttons = {}
 
-icon_puntos = get_icon("trending-up-down", size=18, light_color="#1E293B", dark_color="#F8FAFC")
-btn_puntos = ctk.CTkButton(
-    sidebar,
-    text="  Puntos Colineales",
-    image=icon_puntos,
-    compound="left",
-    height=40,
-    corner_radius=8,
-    anchor="w",
-    font=ctk.CTkFont(size=13, weight="bold"),
-    command=lambda: show_page("puntos_colineales")
-)
-btn_puntos.pack(fill="x", padx=14, pady=4)
-nav_buttons["puntos_colineales"] = btn_puntos
-
-icon_triangulo = get_icon("triangle", size=18, light_color="#1E293B", dark_color="#F8FAFC")
-btn_triangulo = ctk.CTkButton(
-    sidebar,
-    text="  Trazado de Triángulo",
-    image=icon_triangulo,
-    compound="left",
-    height=40,
-    corner_radius=8,
-    anchor="w",
-    font=ctk.CTkFont(size=13),
-    command=lambda: show_page("triangulo")
-)
-btn_triangulo.pack(fill="x", padx=14, pady=4)
-nav_buttons["triangulo"] = btn_triangulo
-nav_buttons["futuro"] = btn_triangulo
-
-icon_circulo = get_icon("circle", size=18, light_color="#1E293B", dark_color="#F8FAFC")
-btn_circulo = ctk.CTkButton(
-    sidebar,
-    text="  Circunferencia y Círculo",
-    image=icon_circulo,
-    compound="left",
-    height=40,
-    corner_radius=8,
-    anchor="w",
-    font=ctk.CTkFont(size=13),
-    command=lambda: show_page("circulo")
-)
-btn_circulo.pack(fill="x", padx=14, pady=4)
-nav_buttons["circulo"] = btn_circulo
+for clave, texto, icono, _ in PAGINAS:
+    btn = ctk.CTkButton(
+        sidebar,
+        text=f"  {texto}",
+        image=get_icon(icono, size=18, light_color="#1E293B", dark_color="#F8FAFC"),
+        compound="left",
+        height=40,
+        corner_radius=8,
+        anchor="w",
+        font=ctk.CTkFont(size=13),
+        command=lambda c=clave: show_page(c)
+    )
+    btn.pack(fill="x", padx=14, pady=4)
+    nav_buttons[clave] = btn
 
 
 def on_page_changed(page_name):
-    active_key = "triangulo" if page_name in ("triangulo", "futuro") else page_name
-    for name in ("puntos_colineales", "triangulo", "circulo"):
-        btn = nav_buttons.get(name)
-        if not btn:
-            continue
-        if name == active_key:
+    for name, btn in nav_buttons.items():
+        if name == page_name:
             btn.configure(
                 fg_color=["#3B82F6", "#2563EB"],
                 text_color="#FFFFFF",
@@ -155,9 +121,8 @@ container.grid(row=0, column=1, sticky="nsew")
 container.rowconfigure(0, weight=1)
 container.columnconfigure(0, weight=1)
 
-# Inicializar páginas
+# Inicializar páginas (muestra la primera y marca su botón)
 init_pages(container)
-on_page_changed("puntos_colineales")
 
 if __name__ == "__main__":
     root.mainloop()

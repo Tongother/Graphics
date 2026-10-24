@@ -68,7 +68,16 @@ python main.py
 - **Casos de Trazo del Documento:** Clasifica la recta en 4 casos positivos, 4 negativos y 3 especiales (45° en sus 4 direcciones, horizontal y vertical), contando cada sentido de dibujo como un caso distinto, y muestra su notación (p. ej. `+m<1, m = 2/5 · Xₖ₊₁ = Xₖ + 1 · Yₖ₊₁ = Yₖ + m`).
 - **Decimales y Píxeles:** La tabla muestra los valores con dos decimales y el píxel redondeado al entero más cercano.
 - **Datos Analíticos Separados y Claros:** Tarjetas con métricas organizadas en jerarquía estructurada en 4 columnas.
-- **Arquitectura Directa sin Componentes Innecesarios:** El código está organizado limpiamente dentro de `pages/` y `main.py`.
+- **Arquitectura en Capas:** La lógica de los algoritmos (`core/`) está separada de la interfaz (`pages/`) y de las piezas visuales compartidas (`ui/`), así cada parte se modifica y prueba por separado.
+
+---
+
+## Pruebas
+
+```bash
+python -m unittest discover -s tests -p "test_core_*.py"   # lógica de los algoritmos (< 1 s)
+python -m unittest discover -s tests                       # todas, incluye ventanas (~25 s)
+```
 
 ---
 
@@ -76,16 +85,26 @@ python main.py
 
 ```text
 .
-├── main.py
-├── test_app.py
+├── main.py              # Ventana, menú lateral (desde pages/index.py) y switch de tema
+├── AGENTS.md            # Guía del proyecto para agentes de IA (Antigravity, Claude Code, …)
+├── CLAUDE.md            # Solo importa AGENTS.md para Claude Code
 ├── requirements.txt
-├── README.md
-├── public/          # Iconos SVG (se cargan por nombre de archivo)
-└── pages/
-    ├── Futuro.py
-    ├── circulo.py
-    ├── icons.py
-    ├── index.py
-    ├── puntos_colineales.py
-    └── triangulo.py
+├── core/                # Lógica pura de los algoritmos (sin interfaz)
+│   ├── recta.py         #   DDA, pendiente, 11 casos de trazo
+│   ├── triangulo.py     #   métricas, clasificación, lados y relleno DDA
+│   └── circulo.py       #   punto medio de Bresenham, octantes, rellenos, ecuaciones
+├── ui/                  # Piezas de interfaz compartidas
+│   ├── plano.py         #   plano cartesiano, zoom y arrastre
+│   ├── widgets.py       #   tarjetas, entradas, botones, tablas
+│   ├── tema.py          #   modo oscuro / claro
+│   └── icons.py         #   iconos SVG -> CTkImage
+├── pages/               # Una página por módulo (solo interfaz)
+│   ├── index.py         #   registro PAGINAS y navegación
+│   ├── puntos_colineales.py
+│   ├── triangulo.py
+│   └── circulo.py
+├── tests/               # test_core_* (rápidas), test_graficas, test_interfaz
+├── public/              # Iconos SVG (se cargan por nombre de archivo)
+├── docs/                # PDF de la guía, diagramas de flujo, Gantt y tablas de casos
+└── .claude/skills/      # Instrucciones para agregar módulos nuevos con IA
 ```
