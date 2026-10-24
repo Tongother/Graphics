@@ -33,6 +33,9 @@ def entradas(page):
 class TestInterfaz(unittest.TestCase):
 
     def setUp(self):
+        # El estado de cada página es global al módulo: se limpia para que una prueba no herede datos de otra
+        for estado in (current_data, current_triangle_data, current_circle_data):
+            estado.clear()
         self.app = ctk.CTk()
         self.app.withdraw()
         self.container = ctk.CTkFrame(self.app)
@@ -55,11 +58,10 @@ class TestInterfaz(unittest.TestCase):
             show_page(clave)
             self.assertEqual(get_current_page(), clave)
 
-        # El círculo carga el ejemplo del PDF al abrir
-        self.assertTrue(current_circle_data.get("has_data"))
-        self.assertEqual(current_circle_data.get("xc"), 150)
-        self.assertEqual(current_circle_data.get("yc"), 100)
-        self.assertEqual(current_circle_data.get("r"), 10)
+        # Ninguna página calcula al abrir: hay que presionar el botón
+        self.assertFalse(current_data.get("has_data", False))
+        self.assertFalse(current_triangle_data.get("has_data", False))
+        self.assertFalse(current_circle_data.get("has_data", False))
 
     def test_puntos_calcular_y_limpiar(self):
         page = create_puntos_colineales_page(self.container)
@@ -123,7 +125,11 @@ class TestInterfaz(unittest.TestCase):
     def test_circulo_traslacion_y_metodos(self):
         page = create_circulo_page(self.container)
         page.pack()
-        self.assertEqual(current_circle_data.get("xc"), 150)
+        self.assertFalse(current_circle_data.get("has_data", False))
+
+        # Valores iniciales: el caso del PDF, C(150, 100) y R = 10
+        boton(page, "Calcular y Trazar").invoke()
+        self.assertEqual((current_circle_data["xc"], current_circle_data["yc"], current_circle_data["r"]), (150, 100, 10))
 
         boton(page, "X + 5").invoke()
         self.assertEqual(current_circle_data.get("xc"), 155)

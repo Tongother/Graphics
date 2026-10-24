@@ -338,11 +338,12 @@ def create_circulo_page(container):
     metrics_frame.pack(fill="x", padx=20, pady=(0, 8))
     metrics_frame.columnconfigure((0, 1, 2, 3), weight=1, uniform="metric")
 
+    # Sin datos hasta que el usuario calcule
     cards = {
-        "ec_ord": _tarjeta_metrica(metrics_frame, 0, "ECUACIÓN ORDINARIA", "(X - 150)² + (Y - 100)² = 100", "Primer punto (0, r): (150, 110)"),
-        "ec_exp": _tarjeta_metrica(metrics_frame, 1, "ECUACIÓN EXPLÍCITA", "Y = 100 ± √(100 - (150 - X)²)", "Y = Yc ± √(r² - (Xc - X)²)"),
-        "geom": _tarjeta_metrica(metrics_frame, 2, "MÉTRICAS GEOMÉTRICAS", "Área: 314.16 u²", "Perímetro: 62.83 u · Diám: 20"),
-        "pix": _tarjeta_metrica(metrics_frame, 3, "PÍXELES Y OCTANTES", "7 pasos · P₀ = -9", "Simetría de 8 Octantes con Traslación"),
+        "ec_ord": _tarjeta_metrica(metrics_frame, 0, "ECUACIÓN ORDINARIA", "--", "Primer punto (0, r): --"),
+        "ec_exp": _tarjeta_metrica(metrics_frame, 1, "ECUACIÓN EXPLÍCITA", "--", "Y = Yc ± √(r² - (Xc - X)²)"),
+        "geom": _tarjeta_metrica(metrics_frame, 2, "MÉTRICAS GEOMÉTRICAS", "Área: --", "Perímetro: -- · Diám: --"),
+        "pix": _tarjeta_metrica(metrics_frame, 3, "PÍXELES Y OCTANTES", "--", "Simetría de 8 Octantes con Traslación"),
     }
 
     # --- 3. GRÁFICA / PLANO CARTESIANO ---
@@ -580,7 +581,5 @@ def create_circulo_page(container):
 
     register_plot_updater(on_theme_updated)
 
-    # Calcular valores iniciales al abrir
-    calculate()
-
+    # No se calcula al abrir: el usuario presiona «Calcular y Trazar» (o una plantilla)
     return page

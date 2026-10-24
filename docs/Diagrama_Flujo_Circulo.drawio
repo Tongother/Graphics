@@ -1,0 +1,425 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="flujo" name="Circunferencia y Círculo">
+    <mxGraphModel dx="2129" dy="1204" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2500" pageHeight="2410" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ini" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=1;arcSize=50;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Inicio" vertex="1">
+          <mxGeometry height="44" width="160" x="420" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="app" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Crear ventana principal: tema oscuro y barra lateral con el menú (Puntos Colineales, Trazado de Triángulo, Circunferencia y Círculo) e interruptor de tema" vertex="1">
+          <mxGeometry height="70" width="400" x="300" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="pags" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Crear las tres páginas con sus valores iniciales y el plano vacío" vertex="1">
+          <mxGeometry height="50" width="360" x="320" y="206" as="geometry" />
+        </mxCell>
+        <mxCell id="menu" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Qué opción del menú&amp;nbsp;&lt;div&gt;está seleccionada?&lt;br&gt;(al iniciar: Puntos Colineales)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="240" x="380" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="sub1" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=process;backgroundOutline=1;size=0.06;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Puntos Colineales" vertex="1">
+          <mxGeometry height="56" width="240" x="860" y="286" as="geometry" />
+        </mxCell>
+        <mxCell id="sub2" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=process;backgroundOutline=1;size=0.06;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Trazado de Triángulo" vertex="1">
+          <mxGeometry height="56" width="240" x="860" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="ini" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="app" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="pags" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="pags" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="menu" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="menu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="sub1" value="Puntos Colineales">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="355" />
+              <mxPoint x="680" y="314" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="menu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="sub2" value="Trazado de Triángulo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="355" />
+              <mxPoint x="680" y="398" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="init" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Mostrar la página Circunferencia y Círculo: C(150, 100) y R = 10 en las entradas, método «DDA radial» y visualización «Ambos»" vertex="1">
+          <mxGeometry height="64" width="360" x="320" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_wait" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="300" y="552" as="geometry" />
+        </mxCell>
+        <mxCell id="wait" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Esperar acción del usuario" vertex="1">
+          <mxGeometry height="44" width="240" x="380" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="nota" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;text;align=left;verticalAlign=middle;fontSize=11;" value="① = regresar a «Esperar acción del usuario»" vertex="1">
+          <mxGeometry height="40" width="300" x="640" y="548" as="geometry" />
+        </mxCell>
+        <mxCell id="act" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Qué acción&lt;br&gt;realiza?" vertex="1">
+          <mxGeometry height="100" width="200" x="400" y="626" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="menu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="init" value="Circunferencia y Círculo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="init" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="wait" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="c1_wait" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="wait" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="wait" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="act" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="menu" value="Elegir otra opción del menú">
+          <mxGeometry relative="1" x="-0.5" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="150" y="676" />
+              <mxPoint x="150" y="355" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="btn" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Qué botón presionó?" vertex="1">
+          <mxGeometry height="100" width="200" x="400" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="plant" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Escribir en las entradas C y R de la plantilla elegida (Ejemplo 1, Ejemplo 2 u Origen)" vertex="1">
+          <mxGeometry height="64" width="240" x="60" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="tras" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Xc y Yc son numéricos?" vertex="1">
+          <mxGeometry height="90" width="190" x="700" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tras_no" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="930" y="965" as="geometry" />
+        </mxCell>
+        <mxCell id="tras_si" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Xc = Xc ± 5 o Yc = Yc ± 5 (redondeado), según el botón" vertex="1">
+          <mxGeometry height="64" width="250" x="670" y="1070" as="geometry" />
+        </mxCell>
+        <mxCell id="read" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Leer centro (Xc, Yc), radio R y método de relleno" vertex="1">
+          <mxGeometry height="50" width="320" x="340" y="1190" as="geometry" />
+        </mxCell>
+        <mxCell id="num" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Son valores numéricos?" vertex="1">
+          <mxGeometry height="90" width="190" x="405" y="1270" as="geometry" />
+        </mxCell>
+        <mxCell id="err" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Mostrar error «Dato inválido»" vertex="1">
+          <mxGeometry height="50" width="200" x="710" y="1290" as="geometry" />
+        </mxCell>
+        <mxCell id="err_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="790" y="1370" as="geometry" />
+        </mxCell>
+        <mxCell id="rpos" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿R &amp;gt; 0?" vertex="1">
+          <mxGeometry height="90" width="190" x="405" y="1400" as="geometry" />
+        </mxCell>
+        <mxCell id="r_err" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Avisar «Radio inválido»: R debe ser mayor a 0" vertex="1">
+          <mxGeometry height="60" width="210" x="705" y="1415" as="geometry" />
+        </mxCell>
+        <mxCell id="r_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="790" y="1505" as="geometry" />
+        </mxCell>
+        <mxCell id="alg" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Ubicar C(Xc, Yc) en su píxel; primer punto (X₀, Y₀) = (0, r) y los puntos (Xc, Yc ± r), (Xc ± r, Yc); P₀ = 1 − r; k = 0" vertex="1">
+          <mxGeometry height="84" width="340" x="330" y="1530" as="geometry" />
+        </mxCell>
+        <mxCell id="ciclo" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿X &amp;lt; Y?" vertex="1">
+          <mxGeometry height="80" width="150" x="425" y="1646" as="geometry" />
+        </mxCell>
+        <mxCell id="pk" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Pₖ &amp;lt; 0?" vertex="1">
+          <mxGeometry height="84" width="170" x="415" y="1756" as="geometry" />
+        </mxCell>
+        <mxCell id="pa" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Siguiente punto (Xₖ₊₁, Yₖ):&lt;br&gt;Pₖ₊₁ = Pₖ + 2Xₖ₊₁ + 1" vertex="1">
+          <mxGeometry height="70" width="220" x="220" y="1872" as="geometry" />
+        </mxCell>
+        <mxCell id="pb" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Siguiente punto (Xₖ₊₁, Yₖ − 1):&lt;br&gt;Pₖ₊₁ = Pₖ + 2Xₖ₊₁ + 1 − 2Yₖ₊₁" vertex="1">
+          <mxGeometry height="70" width="220" x="560" y="1872" as="geometry" />
+        </mxCell>
+        <mxCell id="oct" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Guardar el paso y sus 8 puntos simétricos trasladados (X + Xc, Y + Yc); k = k + 1" vertex="1">
+          <mxGeometry height="64" width="300" x="350" y="1982" as="geometry" />
+        </mxCell>
+        <mxCell id="met" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" value="¿Método de relleno?" vertex="1">
+          <mxGeometry height="100" width="200" x="1050" y="1636" as="geometry" />
+        </mxCell>
+        <mxCell id="dda" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="DDA radial: C fijo; programa de la línea (11 casos) de C a cada punto B del arreglo de 8 octantes" vertex="1">
+          <mxGeometry height="90" width="220" x="800" y="1776" as="geometry" />
+        </mxCell>
+        <mxCell id="cuer" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Cuerdas: por cada fila Y del contorno, línea de X mínima a X máxima" vertex="1">
+          <mxGeometry height="90" width="220" x="1040" y="1776" as="geometry" />
+        </mxCell>
+        <mxCell id="conc" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Círculos concéntricos: punto medio para cada radio entero de 1 a R" vertex="1">
+          <mxGeometry height="90" width="220" x="1280" y="1776" as="geometry" />
+        </mxCell>
+        <mxCell id="eq" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Calcular ecuaciones (ordinaria, explícita y general), área, perímetro, diámetro y huecos del relleno" vertex="1">
+          <mxGeometry height="70" width="300" x="1000" y="1916" as="geometry" />
+        </mxCell>
+        <mxCell id="tarj" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Mostrar tarjetas: ecuaciones,&amp;nbsp;&lt;div&gt;métricas, pasos y P₀, píxeles de borde, relleno y huecos&lt;/div&gt;" vertex="1">
+          <mxGeometry height="64" width="340" x="980" y="2022" as="geometry" />
+        </mxCell>
+        <mxCell id="tabla" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Llenar solo la pestaña visible: iteraciones,&amp;nbsp;&lt;div&gt;octante elegido o líneas DDA (25 por página)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="64" width="340" x="980" y="2120" as="geometry" />
+        </mxCell>
+        <mxCell id="plot" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Dibujar circunferencia ideal, relleno con rectas de C a cada B, píxeles del borde, (0, r) y centro C" vertex="1">
+          <mxGeometry height="72" width="360" x="970" y="2218" as="geometry" />
+        </mxCell>
+        <mxCell id="plot_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="1130" y="2326" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="btn" value="Calcular y trazar / plantilla / trasladar centro / cambiar método">
+          <mxGeometry relative="1" x="0.6" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="btn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="plant" value="Plantilla">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="btn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tras" value="Trasladar centro">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="795" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="btn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="read" value="Calcular y trazar / cambiar método">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="tras" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="tras_no" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="tras" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="tras_si" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="plant" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="read" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="1215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="tras_si" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="read" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="795" y="1215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="num" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="num" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="err" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="err" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="err_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="num" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="rpos" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="rpos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="r_err" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" source="r_err" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="r_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" source="rpos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="alg" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" edge="1" parent="1" source="alg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="ciclo" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" edge="1" parent="1" source="ciclo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="pk" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" edge="1" parent="1" source="pk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pa" value="Sí">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="1798" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e29" edge="1" parent="1" source="pk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pb" value="No">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="1798" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e30" edge="1" parent="1" source="pa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="oct" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="2014" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e31" edge="1" parent="1" source="pb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="oct" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="2014" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e32" edge="1" parent="1" source="oct" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ciclo" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="2066" />
+              <mxPoint x="190" y="2066" />
+              <mxPoint x="190" y="1686" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e33" edge="1" parent="1" source="ciclo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="met" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" edge="1" parent="1" source="met" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="dda" value="DDA radial">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="1756" />
+              <mxPoint x="910" y="1756" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e35" edge="1" parent="1" source="met" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="cuer" value="Cuerdas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e36" edge="1" parent="1" source="met" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="conc" value="Concéntricos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="1756" />
+              <mxPoint x="1390" y="1756" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e37" edge="1" parent="1" source="dda" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eq" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="1896" />
+              <mxPoint x="1150" y="1896" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e38" edge="1" parent="1" source="cuer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eq" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e39" edge="1" parent="1" source="conc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="eq" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="1896" />
+              <mxPoint x="1150" y="1896" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e40" edge="1" parent="1" source="eq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="tarj" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e41" edge="1" parent="1" source="tarj" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="tabla" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e42" edge="1" parent="1" source="tabla" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="plot" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e43" edge="1" parent="1" source="plot" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="plot_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_vis" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Redibujar el plano con «Ambos», «Solo contorno» o «Solo relleno» (conserva zoom y posición)" vertex="1">
+          <mxGeometry height="80" width="250" x="1075" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="b_vis_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="1180" y="926" as="geometry" />
+        </mxCell>
+        <mxCell id="b_tab" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Generar la tabla elegida: iteraciones, octante seleccionado o página de líneas DDA (25 por página)" vertex="1">
+          <mxGeometry height="80" width="250" x="1375" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="b_tab_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="1480" y="926" as="geometry" />
+        </mxCell>
+        <mxCell id="e44" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="b_vis" value="Cambiar visualización">
+          <mxGeometry relative="1" x="0.9" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="500" y="760" />
+              <mxPoint x="1200" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e45" edge="1" parent="1" source="b_vis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="b_vis_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e46" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="b_tab" value="Cambiar pestaña / octante / página">
+          <mxGeometry relative="1" x="0.9446" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="500" y="760" />
+              <mxPoint x="1500" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e47" edge="1" parent="1" source="b_tab" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="b_tab_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_zoom" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Ajustar límites: rueda = zoom en el cursor, arrastrar = mover, «Centrar en círculo» = C ± 1.5R, «Ver con origen» = incluir (0, 0)" vertex="1">
+          <mxGeometry height="96" width="250" x="1675" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="b_zoom_p" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Redibujar el plano (la gráfica conserva su tamaño)" vertex="1">
+          <mxGeometry height="56" width="250" x="1675" y="936" as="geometry" />
+        </mxCell>
+        <mxCell id="b_zoom_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="1780" y="1022" as="geometry" />
+        </mxCell>
+        <mxCell id="e48" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="b_zoom" value="Zoom / mover / centrar">
+          <mxGeometry relative="1" x="0.9566" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="500" y="760" />
+              <mxPoint x="1800" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e49" edge="1" parent="1" source="b_zoom" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="b_zoom_p" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e50" edge="1" parent="1" source="b_zoom_p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="b_zoom_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b_tema" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Alternar modo claro / oscuro" vertex="1">
+          <mxGeometry height="50" width="250" x="1975" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="b_tema_p" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=18;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Redibujar el plano con&amp;nbsp;&lt;div&gt;los colores del tema (conserva zoom y posición)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="64" width="250" x="1975" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="b_tema_c" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;ellipse;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" value="1" vertex="1">
+          <mxGeometry height="40" width="40" x="2080" y="984" as="geometry" />
+        </mxCell>
+        <mxCell id="e51" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="b_tema" value="Cambiar tema">
+          <mxGeometry relative="1" x="0.9644" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="500" y="760" />
+              <mxPoint x="2100" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e52" edge="1" parent="1" source="b_tema" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="b_tema_p" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e53" edge="1" parent="1" source="b_tema_p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;" target="b_tema_c" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fin" parent="1" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;rounded=1;arcSize=50;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Fin" vertex="1">
+          <mxGeometry height="44" width="140" x="2290" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="e54" edge="1" parent="1" source="act" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;html=1;endArrow=block;endFill=1;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="fin" value="Cerrar ventana">
+          <mxGeometry relative="1" x="0.9" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="500" y="760" />
+              <mxPoint x="2360" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
