@@ -37,6 +37,15 @@ from pages.triangulo import (
     create_triangulo_page,
     current_triangle_data,
 )
+from pages.circulo import (
+    algoritmo_punto_medio_circunferencia,
+    generar_relleno_dda_radial,
+    generar_relleno_cuerdas_scanlines,
+    get_ecuaciones_circunferencia,
+    render_circle_plot,
+    create_circulo_page,
+    current_circle_data,
+)
 from pages.index import init_pages, show_page, get_current_page
 
 
@@ -518,6 +527,86 @@ class TestGraphicsApp(unittest.TestCase):
         calc_btn.invoke()
         self.assertIsNone(current_data.get("pendiente"))
         self.assertEqual(current_data.get("equation"), "x = 3")
+
+        app.destroy()
+
+    def test_circulo_algoritmo_punto_medio(self):
+        # Caso del PDF del profesor: Centro (150, 100), Radio R = 10
+        pasos, pixeles, pts_ordenados, oct_dict = algoritmo_punto_medio_circunferencia(150, 100, 10)
+        self.assertEqual(len(pasos), 7)
+        self.assertEqual(len(oct_dict), 8)
+
+        # Primer paso k=0: P0 = 1 - 10 = -9, (X1, Y1) = (1, 10) -> Trasladado (151, 110)
+        self.assertEqual(pasos[0]["k"], 0)
+        self.assertEqual(pasos[0]["pk"], -9)
+        self.assertEqual(pasos[0]["x_sig"], 1)
+        self.assertEqual(pasos[0]["y_sig"], 10)
+        self.assertEqual(pasos[0]["base_trans"], (151, 110))
+
+        # Último paso k=6: P6 = 5 >= 0 -> (7, 7) -> Se detiene por X >= Y
+        self.assertEqual(pasos[6]["k"], 6)
+        self.assertEqual(pasos[6]["pk"], 5)
+        self.assertEqual(pasos[6]["x_sig"], 7)
+        self.assertEqual(pasos[6]["y_sig"], 7)
+        self.assertEqual(pasos[6]["base_trans"], (157, 107))
+
+        # Simetría y traslación: probar con centro en origen (0, 0)
+        _, pixeles_origen, _, _ = algoritmo_punto_medio_circunferencia(0, 0, 10)
+        pts_esperados = {(x + 150, y + 100) for (x, y) in pixeles_origen}
+        self.assertEqual(pixeles, pts_esperados)
+
+    def test_circulo_relleno_dda_radial_y_cuerdas(self):
+        xc, yc, r = 150, 100, 10
+        pasos, pixeles_contorno, pts_ordenados, _ = algoritmo_punto_medio_circunferencia(xc, yc, r)
+
+        # 1. Relleno DDA Radial (Pág. 4 del PDF)
+        segs_radial, px_radial, lineas_info = generar_relleno_dda_radial(xc, yc, pts_ordenados)
+        self.assertEqual(len(segs_radial), len(pts_ordenados))
+        self.assertEqual(len(lineas_info), len(pts_ordenados))
+        self.assertTrue(pixeles_contorno.issubset(px_radial))
+        self.assertIn((xc, yc), px_radial)
+
+        # 2. Relleno por Cuerdas / Scanlines
+        segs_cuerdas, px_cuerdas = generar_relleno_cuerdas_scanlines(xc, yc, r, pixeles_contorno)
+        self.assertTrue(pixeles_contorno.issubset(px_cuerdas))
+        ys = {pt[1] for pt in px_cuerdas}
+        self.assertEqual(min(ys), yc - r)
+        self.assertEqual(max(ys), yc + r)
+
+    def test_circulo_ecuaciones(self):
+        # Caso del PDF: Centro (150, 100), R = 10
+        ord_pdf, exp_pdf, gen_pdf = get_ecuaciones_circunferencia(150, 100, 10)
+        self.assertEqual(ord_pdf, "(X - 150)² + (Y - 100)² = 100")
+        self.assertIn("100", exp_pdf)
+        self.assertIn("150 - X", exp_pdf)
+        self.assertIn("X² + Y²", gen_pdf)
+        # D = -300, E = -200, F = 150² + 100² - 100 = 22500 + 10000 - 100 = 32400
+        self.assertIn("- 300X", gen_pdf)
+        self.assertIn("- 200Y", gen_pdf)
+        self.assertIn("+ 32400", gen_pdf)
+
+    def test_circulo_gui_and_navigation(self):
+        app = ctk.CTk()
+        app.withdraw()
+        container = ctk.CTkFrame(app)
+        container.pack()
+
+        init_pages(container)
+        show_page("circulo")
+        self.assertEqual(get_current_page(), "circulo")
+
+        # Verificar que current_circle_data cargue el ejemplo del PDF por defecto
+        self.assertTrue(current_circle_data.get("has_data"))
+        self.assertEqual(current_circle_data.get("xc"), 150)
+        self.assertEqual(current_circle_data.get("yc"), 100)
+        self.assertEqual(current_circle_data.get("r"), 10)
+
+        # Renderizado en figura
+        fig = Figure(figsize=(5, 4))
+        ax = fig.add_subplot(111)
+        canvas = FigureCanvasAgg(fig)
+        render_circle_plot(ax, fig, canvas)
+        self.assertIsNotNone(ax.get_lines())
 
         app.destroy()
 

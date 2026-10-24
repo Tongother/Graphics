@@ -87,10 +87,25 @@ btn_triangulo.pack(fill="x", padx=14, pady=4)
 nav_buttons["triangulo"] = btn_triangulo
 nav_buttons["futuro"] = btn_triangulo
 
+icon_circulo = get_icon("circle", size=18, light_color="#1E293B", dark_color="#F8FAFC")
+btn_circulo = ctk.CTkButton(
+    sidebar,
+    text="  Circunferencia y Círculo",
+    image=icon_circulo,
+    compound="left",
+    height=40,
+    corner_radius=8,
+    anchor="w",
+    font=ctk.CTkFont(size=13),
+    command=lambda: show_page("circulo")
+)
+btn_circulo.pack(fill="x", padx=14, pady=4)
+nav_buttons["circulo"] = btn_circulo
+
 
 def on_page_changed(page_name):
     active_key = "triangulo" if page_name in ("triangulo", "futuro") else page_name
-    for name in ("puntos_colineales", "triangulo"):
+    for name in ("puntos_colineales", "triangulo", "circulo"):
         btn = nav_buttons.get(name)
         if not btn:
             continue

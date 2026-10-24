@@ -58,6 +58,7 @@ python main.py
 
 - **Módulo de Puntos Colineales:** Cálculo analítico de pendientes, vector director, ecuación explícita y rasterización discreta de rectas.
 - **Módulo de Trazado de Triángulo:** Entrada de 3 coordenadas ($A, B, C$), cálculo de área mediante fórmula de Gauss/Shoelace, perímetro, longitudes euclidianas, pendientes de cada lado, clasificación (por lados: Equilátero/Isósceles/Escaleno; por ángulos: Acutángulo/Rectángulo/Obtusángulo; detección de colineales), relleno de polígono translúcido y tabla discreta segmento por segmento con `CTkTable`.
+- **Módulo de Circunferencia y Círculo Relleno:** Implementación completa del **Algoritmo de Punto Medio de Bresenham** con simetría de 8 octantes, **traslación bidimensional del centro** $(X_c, Y_c)$, algoritmo de **círculo relleno por líneas de barrido (scanlines)**, controles de traslación rápida en tiempo real, ecuaciones ordinaria y general, métricas geométricas (área, perímetro, diámetro) y tabla detallada de iteraciones con los 8 puntos trasladados por cada paso.
 - **Diseño Moderno con CustomTkinter:** Interfaz elegante con bordes y esquinas redondeadas, transiciones suaves y estética contemporánea.
 - **Iconos SVG (`CTkImage`):** Iconos de [Tabler Icons](https://tabler.io/icons) guardados en `public/`, rasterizados con `resvg-py` a 4x y recoloreados según el tema, integrados en botones y títulos.
 - **Sistema de Temas Nativo (Dark / Light):** Interruptor `CTkSwitch` en la barra lateral para alternar instantáneamente entre Modo Oscuro y Modo Claro.
@@ -82,6 +83,7 @@ python main.py
 ├── public/          # Iconos SVG (se cargan por nombre de archivo)
 └── pages/
     ├── Futuro.py
+    ├── circulo.py
     ├── icons.py
     ├── index.py
     ├── puntos_colineales.py
